@@ -1,0 +1,171 @@
+{
+  "persons": [
+    {
+      "first_name": "Tugay",
+      "last_name": "Duymaz",
+      "company": 1,
+      "department": "Sales",
+      "job_title": "Yazılımcı",
+      "birthday": "1994-07-06T00:00:00.000Z",
+      "categories": [
+        {
+          "value": "2",
+          "label": "IT"
+        }
+      ],
+      "tags": [
+        {
+          "value": "2",
+          "label": "VIP"
+        }
+      ],
+      "country": "Türkiye",
+      "city": "Denizli",
+      "district": "Pamukkale",
+      "address_line": "Uşak",
+      "phone": "0 (507) 298 71 16",
+      "email": "tcduymaz94@gmail.com",
+      "website": "http://johndoe.com",
+      "is_active": true,
+      "customer_representatives": [
+        1
+      ],
+      "id": "cb44"
+    },
+    {
+      "id": "cace",
+      "first_name": "Sinan",
+      "last_name": "Bakış",
+      "company": 1,
+      "department": "Sales",
+      "job_title": "Tasarımcı",
+      "birthday": "2024-04-30",
+      "categories": [],
+      "tags": [],
+      "country": "Türkiye",
+      "city": "Denizli",
+      "district": "Pamukkale",
+      "address_line": "asdad",
+      "phone": "asdad",
+      "email": "sinan123@gmail.com",
+      "website": "http://johndoe.com",
+      "is_active": true,
+      "customer_representatives": [
+        1
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Logistics",
+      "parent": null,
+      "type": "company"
+    },
+    {
+      "id": "2",
+      "name": "IT",
+      "parent": null,
+      "type": "person"
+    },
+     {
+        "id": 3,
+        "name": "Electronics",
+        "type": "offer"
+    },
+    {
+        "id": 4,
+        "name": "Furniture",
+        "type": "offer"
+    }
+  ],
+  "companies": [],
+  "tags": [
+    {
+      "id": "1",
+      "name": "Urgent",
+      "type": "company"
+    },
+    {
+      "id": "2",
+      "name": "VIP",
+      "type": "person"
+    },
+     {
+        "id": 3,
+        "name": "Sale",
+        "type": "offer"
+    },
+    {
+        "id": 4,
+        "name": "New",
+        "type": "offer"
+    }
+  ],
+  "contact_histories": [
+    {
+      "id": "1",
+      "contact_type": "email",
+      "content": "Follow-up on the project",
+      "date": "2024-05-20T10:00:00Z",
+      "person": 1,
+      "company": 1,
+      "added_by": "admin",
+      "created_at": "2024-05-22T13:07:28.655707Z",
+      "updated_at": "2024-05-22T13:07:28.655707Z"
+    }
+  ],
+  "offers":[
+    {
+        "id": 1,
+        "title": "Spring Sale",
+        "offer_date": "2024-05-01",
+        "valid_until": "2024-06-01",
+        "total": 5000.00,
+        "discount": 10.00,
+        "discount_type": "percentage",
+        "category": 1,
+        "tags": [1, 2],
+        "status": "draft",
+        "created_by": 1,
+        "customer_name": "John Doe",
+        "customer": 1,
+        "company": 1,
+        "address": "123 Main St",
+        "city": "Anytown",
+        "district": "Central",
+        "country": "Country",
+        "postal_code": "12345",
+        "email": "john@example.com",
+        "phone": "555-1234",
+        "created_at": "2024-05-01T12:00:00Z",
+        "updated_at": "2024-05-01T12:00:00Z",
+        "added_by": 1,
+        "items": [
+            {
+                "id": 1,
+                "product": 1,
+                "product_name": "Laptop",
+                "description": "A high-end laptop",
+                "quantity": 2,
+                "unit_price": 2000.00,
+                "tax": 18.00,
+                "total": 4720.00
+            }
+        ]
+    }
+],
+"offer-items":[
+    {
+        "id": 1,
+        "offer": 1,
+        "product": 1,
+        "product_name": "Laptop",
+        "description": "A high-end laptop",
+        "quantity": 2,
+        "unit_price": 2000.00,
+        "tax": 18.00,
+        "total": 4720.00
+    }
+]
+}

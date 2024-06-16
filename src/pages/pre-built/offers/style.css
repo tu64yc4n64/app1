@@ -1,0 +1,23 @@
+ .offers-tools-ul li:first-child{
+    width: 20%;
+ }
+ .offers-tools-ul li:not(:first-child) {
+    width: 15%;
+    display: inline;
+    float: left;
+  }
+  .new-offer-create strong {
+    min-height: 24px;
+    display: block;
+  }
+@media screen and (max-width: 767px) {
+  .offers-tools-ul li {
+    width: 50% !important;
+    display: inline-block !important;
+    float: left !important;
+    margin-bottom: 5px;
+  }
+  .offers-tools-ul {
+    padding-bottom: 0px !important;
+  }
+}
