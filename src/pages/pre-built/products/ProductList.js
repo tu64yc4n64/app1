@@ -67,6 +67,7 @@ const UserListRegularPage = () => {
   };
 
   const [data, setData] = useState([]);
+  const [originalData, setOriginalData] = useState([]);
   console.log(data)
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
@@ -143,17 +144,32 @@ const UserListRegularPage = () => {
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
+  const [selectedProductType, setSelectedProductType] = useState();
   const [selectedTag, setSelectedTag] = useState([]);
   const formattedCategories = categories.map(category => ({
     value: category.id,
     label: category.name
   }));
+  const product_type = [{
+    value: 1,
+    label: "Service",
+    name: "service"
+
+  },
+  {
+    value: 2,
+    label: "Product",
+    name: "product"
+  }]
   const formattedTags = tags.map(tag => ({
     value: tag.id,
     label: tag.name
   }));
   const handleCategoryChange = (selectedOption) => {
     setSelectedCategory(selectedOption);
+  };
+  const handleProductTypeChange = (selectedOption) => {
+    setSelectedProductType(selectedOption);
   };
   const handleTagChange = (selectedOption) => {
     setSelectedTag(selectedOption);
@@ -199,6 +215,8 @@ const UserListRegularPage = () => {
     tax_rate: "",
     updated_at: "",
   });
+
+  console.log(formData);
   const [editId, setEditedId] = useState();
   const [view, setView] = useState({
     edit: false,
@@ -215,11 +233,11 @@ const UserListRegularPage = () => {
     view.add ? document.body.classList.add("toggle-shown") : document.body.classList.remove("toggle-shown");
   }, [view.add])
 
-  const [originalData, setOriginalData] = useState([]);
+
   useEffect(() => {
     if (onSearchText !== "") {
       const filteredObject = data.filter((item) => {
-        return item.first_name.toLowerCase().includes(onSearchText.toLowerCase());
+        return item.name.toLowerCase().includes(onSearchText.toLowerCase());
       });
       setData([...filteredObject]);
     } else {
@@ -237,28 +255,25 @@ const UserListRegularPage = () => {
     setSelectedCategory([])
     setSelectedTag([])
     setStartDate()
+    setSelectedProductType("")
     setFormData({
-      first_name: "",
-      last_name: "",
-      company: "",
-      department: "",
-      job_title: "",
-      birthday: "",
-      categories: [],
+      added_by: "",
+      category: [],
+      created_at: "",
+      description: "",
+      name: "",
+      product_type: "",
+      purchase_price: "",
+      sale_price: "",
       tags: [],
-      country: "",
-      city: "",
-      district: "",
-      address_line: "",
-      phone: "",
-      email: "",
-      website: "",
-      is_active: true,
-      customer_representatives: []
+      tax_rate: "",
+      updated_at: "",
     });
 
     reset({});
   };
+
+
 
   const onFormSubmit = async (form) => {
     let accessToken = localStorage.getItem('accessToken');
@@ -275,6 +290,7 @@ const UserListRegularPage = () => {
       sale_price: sale_price,
       tags: [1],
       tax_rate: "20.00",
+      product_type: selectedProductType.name
     };
 
     try {
@@ -286,7 +302,6 @@ const UserListRegularPage = () => {
       });
       setData([response.data, ...data]);
       setView({ open: false });
-
       resetForm();
     } catch (error) {
       if (error.response) {
@@ -319,19 +334,18 @@ const UserListRegularPage = () => {
       if (item.id === editId) {
         submittedData = {
           added_by: "admin64",
-          category: [],
-          created_at: formData.created_at,
+          category: 5,
           description: formData.description,
           name: formData.name,
-          product_type: formData.product_type,
           purchase_price: formData.purchase_price,
           sale_price: formData.sale_price,
-          tags: [],
-          tax_rate: formData.tax_rate,
-          updated_at: formData.updated_at,
+          tags: [1],
+          tax_rate: "20.00",
+          product_type: formData.product_type || selectedProductType.name
         };
       }
     });
+
 
     try {
       const response = await axios.put(`${BASE_URL}products/${editId}`, submittedData, {
@@ -355,7 +369,6 @@ const UserListRegularPage = () => {
   const onEditClick = (id) => {
     data.forEach((item) => {
       if (item.id === id) {
-
         setFormData({
           added_by: "admin64",
           category: [],
@@ -690,7 +703,13 @@ const UserListRegularPage = () => {
                             </DataTableRow>
 
                             <DataTableRow size="md">
-                              <span className="tb-sub">{item.description}</span>
+                              <span style={{
+                                display: 'inline-block',
+                                width: '300px',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }} className="tb-sub">{item.description}</span>
                             </DataTableRow>
                             <DataTableRow>
                               {item.categories && item.categories.length > 0 && item.categories.map((category, index) => (
@@ -814,23 +833,24 @@ const UserListRegularPage = () => {
               ></Icon>
             </a>
             <div className="p-2">
-              <h5 className="title">Update Product</h5>
+              <h5 className="title">Ürünü Düzenle</h5>
               <div className="mt-4">
                 <form noValidate onSubmit={handleSubmit(onEditSubmit)}>
                   <Row className="g-3">
                     <Col lg="4">
                       <div className="form-group">
-                        <label className="form-label" htmlFor="regular-price">
+                        <label className="form-label text-soft">
+
                           Türü
+
                         </label>
                         <div className="form-control-wrap">
-                          <input
-                            type="text"
-                            className="form-control"
-
-                            value={formData.product_type}
-                            onChange={(e) => setFormData({ ...formData, product_type: e.target.value })} />
-
+                          <RSelect
+                            name="type"
+                            placeholder="Türü"
+                            options={product_type}
+                            value={selectedProductType}
+                            onChange={(selectedOption) => handleProductTypeChange(selectedOption)} />
                         </div>
                       </div>
                     </Col>
@@ -1027,7 +1047,7 @@ const UserListRegularPage = () => {
           <Block>
             <form onSubmit={handleSubmit(onFormSubmit)}>
               <Row className="g-3">
-                <Col size="12">
+                <Col size="6">
                   <div className="form-group">
                     <label htmlFor="urun-adi" className="form-label text-soft">
 
@@ -1046,6 +1066,23 @@ const UserListRegularPage = () => {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                       {errors.name && <span className="invalid">{errors.name.message}</span>}
+                    </div>
+                  </div>
+                </Col>
+                <Col size="6">
+                  <div className="form-group">
+                    <label className="form-label text-soft">
+
+                      Türü
+
+                    </label>
+                    <div className="form-control-wrap">
+                      <RSelect
+                        name="type"
+                        placeholder="Türü"
+                        options={product_type}
+                        value={selectedProductType}
+                        onChange={(selectedOption) => handleProductTypeChange(selectedOption)} />
                     </div>
                   </div>
                 </Col>

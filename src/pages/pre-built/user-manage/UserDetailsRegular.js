@@ -2,22 +2,30 @@ import React, { useContext, useEffect, useState } from "react";
 import Content from "../../../layout/content/Content";
 import Head from "../../../layout/head/Head";
 import ProductH from "../../../images/avatar/a-sm.jpg"
-import { DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, CardBody, CardTitle } from "reactstrap";
+import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, CardBody, CardTitle } from "reactstrap";
+import DatePicker from "react-datepicker";
+import { useForm } from "react-hook-form";
+import { RSelect } from "../../../components/Component";
 import AddMeetModal from "./AddMeetModal";
-import { meetings } from "./meetingData";
-import {
-  Button,
-  Block,
-  BlockBetween,
 
+
+import {
+  Block,
+  BlockDes,
   BlockHead,
   BlockHeadContent,
   BlockTitle,
   Icon,
+  Button,
+  Col,
+  BlockBetween,
   DataTableBody,
   DataTableHead,
   DataTableRow,
-  DataTableItem, PaginationComponent
+  DataTableItem,
+  Row,
+  PaginationComponent,
+  DataTable
 
 } from "../../../components/Component";
 
@@ -81,7 +89,7 @@ const UserDetailsPage = () => {
         if (accessToken) {
 
           try {
-            const response = await axios.get(BASE_URL + "persons/", {
+            const response = await axios.get(BASE_URL + `persons/${userId}`, {
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`
@@ -98,15 +106,57 @@ const UserDetailsPage = () => {
       }
     }
   };
+  const getAllUserContactHistory = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+
+    try {
+      const response = await axios.get(BASE_URL + `contact_histories?person=${userId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setConversation(response.data);
+      setOriginalContactHistory(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+
+          try {
+            const response = await axios.get(BASE_URL + `contact_histories?person=${userId}`, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setConversation(response.data);
+            setOriginalContactHistory(response.data);
+
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
   useEffect(() => {
     getAllUsers()
+    getAllUserContactHistory()
 
   }, [userId])
 
-  const [conversation, setConversation] = useState(meetings);
+
+  const [data, setData] = useState([]);
+
+  const [originalContactHistory, setOriginalContactHistory] = useState([]);
+  const [conversation, setConversation] = useState([]);
   const currentItems = conversation
-  const [data, setData] = useState();
-  console.log(data)
+  console.log(originalContactHistory)
 
   const [sideBar, setSidebar] = useState(false);
   const [itemPerPage, setItemPerPage] = useState(10);
@@ -121,22 +171,83 @@ const UserDetailsPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     date: "",
-    type: "",
-    notice: 0,
+    contact_type: "",
+    content: "",
 
+  });
+  const [editId, setEditedId] = useState();
+  const [view, setView] = useState({
+    edit: false,
+    add: false,
+    details: false,
   });
   const resetForm = () => {
     setFormData({
-      name: "",
-      email: "",
-      balance: 0,
-      phone: "",
-      status: "Active",
+      date: "",
+      contact_type: "",
+      content: "",
     });
   };
   const closeModal = () => {
     setModal({ add: false })
     resetForm();
+  };
+
+
+  const onEditSubmit = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    let submittedData;
+    let newItems = conversation;
+    let index = newItems.findIndex((item) => item.id === editId);
+
+    newItems.forEach((item) => {
+      if (item.id === editId) {
+        submittedData = {
+          date: formData.date,
+          contact_type: formData.contact_type,
+          content: formData.content,
+        };
+      }
+    });
+
+    console.log(submittedData)
+
+    try {
+      const response = await axios.put(`${BASE_URL}contact_histories/${editId}`, submittedData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      // Veritabanı güncelleme başarılı olursa yerel veriyi güncelle
+      newItems[index] = response.data;
+      setData(newItems);
+      resetForm();
+      setView({ edit: false, add: false });
+    } catch (error) {
+      console.error('Veritabanını güncelleme sırasında hata oluştu:', error);
+    }
+  };
+
+
+  const onEditClick = (id) => {
+    conversation.forEach((item) => {
+      if (item.id === id) {
+
+        setFormData({
+          date: item.date,
+          contact_type: item.contact_type,
+          content: item.content,
+
+        });
+      }
+
+    });
+    setEditedId(id);
+
+    setView({ add: false, edit: true });
   };
 
 
@@ -153,10 +264,7 @@ const UserDetailsPage = () => {
     }
   }, [data]);
 
-  // function to toggle sidebar
-  const toggle = () => {
-    setSidebar(!sideBar);
-  };
+
 
   useEffect(() => {
     sideBar ? document.body.classList.add("toggle-shown") : document.body.classList.remove("toggle-shown");
@@ -165,21 +273,53 @@ const UserDetailsPage = () => {
   const [onSearchText, setSearchText] = useState("");
   useEffect(() => {
     if (onSearchText !== "") {
-      const filteredObject = meetings.filter((item) => {
+      const filteredObject = conversation.filter((item) => {
         return item.date.toLowerCase().includes(onSearchText.toLowerCase());
       });
       setConversation([...filteredObject]);
     } else {
-      setConversation([...meetings]);
+      setConversation([...originalContactHistory]);
     }
   }, [onSearchText]);
+
   const onFilterChange = (e) => {
     setSearchText(e.target.value);
   };
 
+  const deleteProduct = async (id) => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    try {
+      await axios.delete(BASE_URL + `contact_histories/${id}`, {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      let updatedData = conversation.filter((item) => item.id !== id);
+      setData([...updatedData]);
+    } catch (error) {
+      console.error("There was an error deleting the product!", error);
+    }
+  };
+
+  const onFormCancel = () => {
+    setView({ edit: false, add: false, details: false });
+    resetForm();
+  };
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const [onSearch, setonSearch] = useState(true);
+  const toggle = (type) => {
+    setView({
+      edit: type === "edit" ? true : false,
+      add: type === "add" ? true : false,
+      details: type === "details" ? true : false,
+    });
+    setonSearch(!onSearch)
+  };
 
-
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   return (
     <>
@@ -231,7 +371,7 @@ const UserDetailsPage = () => {
                   <div className="col-md-4">
                     <div className="card-bordered card" >
                       <CardBody className="card-inner">
-                        <CardTitle tag="h6">Kişi Bilgileri</CardTitle>
+                        <CardTitle tag="h6">Görüşme Bilgileri</CardTitle>
 
                         <div>
                           <ul className="user-detail-info-list">
@@ -245,21 +385,10 @@ const UserDetailsPage = () => {
                             </li>
                             <li>
                               <Icon name="user-fill"></Icon>
-                              {user.customer_representatives.map((representative, id) => (
-                                <strong key={id
-
-                                } className="ps-3" >{representative.name}</strong>
-                              ))}
                             </li>
                             <li>
                               <Icon name="ticket-fill"></Icon>
-                              {user.tags.map((tag, id) => (
-                                <strong key={id} className="ps-3">
-                                  <span className="badge bg-outline-secondary">
-                                    {tag.value}
-                                  </span>
-                                </strong>
-                              ))}
+
                             </li>
                             <li>
                               <Icon name="calender-date-fill"></Icon>
@@ -542,14 +671,14 @@ const UserDetailsPage = () => {
                                   </DataTableRow>
 
                                   <DataTableRow size="md">
-                                    <span className="badge bg-outline-secondary">{item.type}</span>
+                                    <span className="badge bg-outline-secondary">{item.contact_type}</span>
                                   </DataTableRow>
                                   <DataTableRow>
-                                    <span className="tb-sub">{item.notice}</span>
+                                    <span className="tb-sub">{item.content}</span>
                                   </DataTableRow>
                                   <DataTableRow size="md">
                                     <img style={{ borderRadius: "50%", width: "25px" }} src={ProductH} alt="product" className="thumb" />
-                                    <span style={{ paddingLeft: "5px" }} className="tb-sub">{item.representative.name}</span>
+                                    <span style={{ paddingLeft: "5px" }} className="tb-sub"></span>
                                   </DataTableRow>
                                   <DataTableRow className="nk-tb-col-tools">
                                     <ul className="nk-tb-actions gx-1 my-n1">
@@ -569,6 +698,11 @@ const UserDetailsPage = () => {
                                                 <DropdownItem
                                                   tag="a"
                                                   href="#edit"
+                                                  onClick={(ev) => {
+                                                    ev.preventDefault();
+                                                    onEditClick(item.id);
+                                                    toggle("edit");
+                                                  }}
 
                                                 >
                                                   <Icon name="edit"></Icon>
@@ -579,6 +713,11 @@ const UserDetailsPage = () => {
                                                 <DropdownItem
                                                   tag="a"
                                                   href="#view"
+                                                  onClick={(ev) => {
+                                                    ev.preventDefault();
+                                                    onEditClick(item.id);
+                                                    toggle("details");
+                                                  }}
 
                                                 >
                                                   <Icon name="eye"></Icon>
@@ -589,6 +728,10 @@ const UserDetailsPage = () => {
                                                 <DropdownItem
                                                   tag="a"
                                                   href="#remove"
+                                                  onClick={(ev) => {
+                                                    ev.preventDefault();
+                                                    deleteProduct(item.id);
+                                                  }}
 
                                                 >
                                                   <Icon name="trash"></Icon>
@@ -611,10 +754,10 @@ const UserDetailsPage = () => {
                             : null}
                         </DataTableBody>
                         <div className="card-inner">
-                          {data.length > 0 ? (
+                          {originalContactHistory.length > 0 ? (
                             <PaginationComponent
                               itemPerPage={itemPerPage}
-                              totalItems={data.length}
+                              totalItems={originalContactHistory.length}
                               paginate={paginate}
                               currentPage={currentPage}
                             />
@@ -637,6 +780,128 @@ const UserDetailsPage = () => {
             </div>
 
           </Block >
+
+          <Modal isOpen={view.edit} toggle={() => onFormCancel()} className="modal-dialog-centered" size="lg">
+            <ModalBody>
+              <a href="#cancel" className="close">
+                {" "}
+                <Icon
+                  name="cross-sm"
+                  onClick={(ev) => {
+                    ev.preventDefault();
+                    onFormCancel();
+                  }}
+                ></Icon>
+              </a>
+              <div className="p-2">
+                <h5 className="title">Görüşmeyi Düzenle</h5>
+                <div className="mt-4">
+                  <form noValidate onSubmit={handleSubmit(onEditSubmit)}>
+                    <Row className="g-3">
+                      <Col lg="4">
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="firstName">
+                            Tarih
+                          </label>
+                          <div className="form-control-wrap">
+                            <input
+                              id="firstName"
+                              type="text"
+                              className="form-control"
+
+                              value={formData.date}
+                              onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+
+                          </div>
+                        </div>
+                      </Col>
+                      <Col lg="4">
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="lastName">
+                            Görüşme Türü
+                          </label>
+                          <div className="form-control-wrap">
+                            <input
+                              id="lastName"
+                              type="text"
+                              className="form-control"
+
+                              value={formData.contact_type}
+                              onChange={(e) => setFormData({ ...formData, contact_type: e.target.value })} />
+
+                          </div>
+                        </div>
+                      </Col>
+                      <Col lg="4">
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="sirket">
+                            Notlar
+                          </label>
+                          <div className="form-control-wrap">
+                            <input
+                              id="sirket"
+                              type="text"
+                              className="form-control"
+
+                              value={formData.content}
+                              onChange={(e) => setFormData({ ...formData, content: e.target.value })} />
+
+                          </div>
+                        </div>
+                      </Col>
+                      <Col size="12">
+                        <Button color="primary" type="submit">
+
+                          <span>Görüşmeyi Güncelle</span>
+                        </Button>
+                      </Col>
+                    </Row>
+                  </form>
+                </div>
+              </div>
+            </ModalBody>
+          </Modal>
+          <Modal isOpen={view.details} toggle={() => onFormCancel()} className="modal-dialog-centered" size="lg">
+            <ModalBody>
+              <a href="#cancel" className="close">
+                {" "}
+                <Icon
+                  name="cross-sm"
+                  onClick={(ev) => {
+                    ev.preventDefault();
+                    onFormCancel();
+                  }}
+                ></Icon>
+              </a>
+              <div className="nk-modal-head">
+                <h4 className="nk-modal-title title">
+                  Görüşme Bilgileri <small className="text-primary"></small>
+                </h4>
+
+              </div>
+              <div className="nk-tnx-details mt-sm-3">
+                <Row className="gy-3">
+                  <Col lg={4}>
+                    <span className="sub-text">Tarih</span>
+                    <span className="caption-text">{formData.date}</span>
+                  </Col>
+                  <Col lg={4}>
+                    <span className="sub-text">Görüşme Türü</span>
+                    <span className="caption-text">{formData.contact_type}</span>
+                  </Col>
+                  <Col lg={4}>
+                    <span className="sub-text">Notlar</span>
+                    <span className="caption-text">{formData.content}</span>
+                  </Col>
+
+
+
+                </Row>
+              </div>
+            </ModalBody>
+          </Modal>
+
+          {view.add && <div className="toggle-overlay" onClick={toggle}></div>}
           <AddMeetModal modal={modal.add} closeModal={closeModal} />
         </Content >
 

@@ -39,6 +39,8 @@ const UserListRegularPage = () => {
 
 
   const [data, setData] = useState([]);
+
+
   console.log(data)
 
   const getAllCategories = async () => {
@@ -212,18 +214,7 @@ const UserListRegularPage = () => {
   const [tablesm, updateTableSm] = useState(false);
   const [startDate, setStartDate] = useState();
   const [itemPerPage, setItemPerPage] = useState(10);
-  const [sort, setSortState] = useState("");
   const [onSearch, setonSearch] = useState(true);
-  const sortFunc = (params) => {
-    let defaultData = data;
-    if (params === "asc") {
-      let sortedData = defaultData.sort((a, b) => a.name.localeCompare(b.name));
-      setData([...sortedData]);
-    } else if (params === "dsc") {
-      let sortedData = defaultData.sort((a, b) => b.name.localeCompare(a.name));
-      setData([...sortedData]);
-    }
-  };
   const durum = [
     { value: true, label: 'Aktif' },
     { value: false, label: 'Pasif' },
@@ -244,7 +235,7 @@ const UserListRegularPage = () => {
     phone: "",
     email: "",
     website: "",
-    is_active: true,
+    is_active: null,
     customer_representatives: []
   });
   const [editId, setEditedId] = useState();
@@ -301,11 +292,18 @@ const UserListRegularPage = () => {
       phone: "",
       email: "",
       website: "",
-      is_active: true,
+      is_active: null,
       customer_representatives: []
     });
 
     reset({});
+  };
+
+  const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Aylar 0-11 arasıdır
+    const year = date.getFullYear();
+    return `${year}/${month}/${day}`;
   };
 
   const onFormSubmit = async (form) => {
@@ -319,13 +317,8 @@ const UserListRegularPage = () => {
       //  company: "",
       //  department: "",
       job_title: job_title,
-      // birthday: birthday,
-      categories: [{
-        "id": 1,
-        "name": "Logistics",
-        "parent": null,
-        "type": "company"
-      },],
+      //birthday: birthday,
+      categories: [1],
       tags: [],
       country: "Türkiye",
       city: "Uşak",
@@ -338,6 +331,8 @@ const UserListRegularPage = () => {
       //customer_representatives: [],
       added_by: [1]
     };
+
+    console.log(submittedData)
 
     try {
       const response = await axios.post(BASE_URL + "persons/", submittedData, {
@@ -389,6 +384,8 @@ const UserListRegularPage = () => {
       }
     });
 
+    console.log(submittedData)
+
     try {
       const response = await axios.put(`${BASE_URL}persons/${editId}`, submittedData, {
         headers: {
@@ -428,7 +425,7 @@ const UserListRegularPage = () => {
           phone: item.phone,
           email: item.email,
           website: item.website,
-          is_active: true,
+          is_active: item.is_active,
           customer_representatives: item.customer_representatives,
 
         });
@@ -724,7 +721,7 @@ const UserListRegularPage = () => {
                             </DataTableRow>
                             <DataTableRow>
                               <Link to={`${process.env.PUBLIC_URL}/kisi-detay/${item.id}`}>
-                                <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "center" }}>
+                                <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
 
                                   <span className="title">{item.first_name} {item.last_name}</span>
                                   <small className="text-soft">{item.email}</small>
@@ -859,7 +856,7 @@ const UserListRegularPage = () => {
               ></Icon>
             </a>
             <div className="p-2">
-              <h5 className="title">Update Product</h5>
+              <h5 className="title">Kişiyi Düzenle</h5>
               <div className="mt-4">
                 <form noValidate onSubmit={handleSubmit(onEditSubmit)}>
                   <Row className="g-3">
@@ -1407,10 +1404,11 @@ const UserListRegularPage = () => {
                     <div className="form-control-wrap">
                       <DatePicker
                         id="dogumTarihi"
-                        onChange={(e) => setFormData({ ...formData, birthday: e })}
-                        selected={formData.birthday}
+                        onChange={(date) => setFormData({ ...formData, birthday: formatDate(date) })}
+                        selected={formData.birthday ? new Date(formData.birthday) : null}
                         className="form-control"
                         placeholderText="Doğum Tarihi"
+                        dateFormat="dd/MM/yyyy" // Tarih seçiminde görünen format
 
                       />
                     </div>
