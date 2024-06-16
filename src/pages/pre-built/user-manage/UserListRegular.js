@@ -185,11 +185,14 @@ const UserListRegularPage = () => {
 
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
+  console.log(selectedCategory)
 
   const [selectedTag, setSelectedTag] = useState([]);
   const formattedCategories = categories.map(category => ({
     value: category.id,
-    label: category.name
+    label: category.name,
+    type: category.type,
+    parent: category.parent
   }));
   const formattedTags = tags.map(tag => ({
     value: tag.id,
@@ -318,7 +321,14 @@ const UserListRegularPage = () => {
       //  department: "",
       job_title: job_title,
       //birthday: birthday,
-      categories: [1],
+      categories: selectedCategory.map((category) => (
+        {
+          id: category.value,
+          name: category.label,
+          type: category.type,
+          parent: category.parent
+        }
+      )),
       tags: [],
       country: "Türkiye",
       city: "Uşak",
