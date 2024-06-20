@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { RSelect } from "../../../components/Component";
 import DatePicker from "react-datepicker";
 import api from '../../../api/api';
+import Swal from "sweetalert2";
 import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, Alert } from "reactstrap";
 
 import {
@@ -523,20 +524,22 @@ const UserListRegularPage = () => {
       });
       let updatedData = data.filter((item) => item.id !== id);
       setData([...updatedData]);
-      setAlertMessage("Müşteri Başarıyla Silindi!");
-      setAlertVisible(true);
-      setAlertColor("warning");
-
-      setTimeout(() => {
-        setAlertVisible(false);
-      }, 3000);
+      Swal.fire({
+        icon: "warning",
+        title: "Başarılı!",
+        text: "Ürün başarıyla silindi!",
+        timer: 2000,
+        showConfirmButton: false
+      });
     } catch (error) {
       console.error("There was an error deleting the product!", error);
-      setAlertMessage("Kişi Silinirken Bir Hatayla Karşılaşıldı");
-      setAlertVisible(true);
-      setTimeout(() => {
-        setAlertVisible(false);
-      }, 3000);
+      Swal.fire({
+        icon: "error",
+        title: "Hata!",
+        text: "Ürün silinirken bir hata oluştu!",
+        timer: 2000,
+        showConfirmButton: false
+      });
     }
   };
 
