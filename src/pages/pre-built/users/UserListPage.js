@@ -37,37 +37,8 @@ const BASE_URL = "https://tiosone.com/users/api/"
 
 const UserListPage = () => {
 
-    let accessToken = localStorage.getItem('accessToken');
-    console.log(accessToken)
-
-    const getAllCategories = async () => {
-        try {
-            const response = await axios.get(BASE_URL + "categories?type=person", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`
-                }
-            });;
-            setCategories(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
-    const getAllTags = async () => {
-        try {
-            const response = await axios.get(BASE_URL + "tags?type=person", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`
-                }
-            });;
-            setTags(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
-
     const [data, setData] = useState([]);
+    console.log(data)
     const refreshAccessToken = async () => {
         const refreshToken = localStorage.getItem('refreshToken');
 
@@ -104,7 +75,7 @@ const UserListPage = () => {
 
 
         try {
-            const response = await axios.get(BASE_URL + "persons/", {
+            const response = await axios.get(BASE_URL + "users/", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -119,7 +90,7 @@ const UserListPage = () => {
                 if (accessToken) {
 
                     try {
-                        const response = await axios.get(BASE_URL + "persons/", {
+                        const response = await axios.get(BASE_URL + "users/", {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${accessToken}`
@@ -140,32 +111,7 @@ const UserListPage = () => {
         getAllUsers()
 
     }, [])
-    const [categories, setCategories] = useState([]);
-    const [tags, setTags] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState([]);
-    const [selectedTag, setSelectedTag] = useState([]);
-    const formattedCategories = categories.map(category => ({
-        value: category.id,
-        label: category.name
-    }));
-    const formattedTags = tags.map(tag => ({
-        value: tag.id,
-        label: tag.name
-    }));
-    const handleCategoryChange = (selectedOption) => {
-        setSelectedCategory(selectedOption);
-    };
-    const handleTagChange = (selectedOption) => {
-        setSelectedTag(selectedOption);
-    };
-    useEffect(() => {
-        getAllCategories()
 
-    }, [])
-    useEffect(() => {
-        getAllTags()
-
-    }, [])
     const [sm, updateSm] = useState(false);
     const [tablesm, updateTableSm] = useState(false);
     const [startDate, setStartDate] = useState();
@@ -187,23 +133,10 @@ const UserListPage = () => {
         { value: false, label: 'Pasif' },
     ];
     const [formData, setFormData] = useState({
-        first_name: "",
-        last_name: "",
-        company: "",
-        department: "",
-        job_title: "",
-        birthday: "",
-        categories: [],
-        tags: [],
-        country: "",
-        city: "",
-        district: "",
-        address_line: "",
-        phone: "",
+        username: "",
         email: "",
-        website: "",
-        is_active: true,
-        customer_representatives: []
+        password: ""
+
     });
     const [editId, setEditedId] = useState();
     const [view, setView] = useState({
@@ -240,61 +173,29 @@ const UserListPage = () => {
     };
 
     const resetForm = () => {
-        setSelectedCategory([])
-        setSelectedTag([])
+
         setStartDate()
         setFormData({
-            first_name: "",
-            last_name: "",
-            company: "",
-            department: "",
-            job_title: "",
-            birthday: "",
-            categories: [],
-            tags: [],
-            country: "",
-            city: "",
-            district: "",
-            address_line: "",
-            phone: "",
+            username: "",
             email: "",
-            website: "",
-            is_active: true,
-            customer_representatives: []
+            password: ""
         });
 
         reset({});
     };
-    console.log(selectedCategory)
 
     const onFormSubmit = async (form) => {
         let accessToken = localStorage.getItem('accessToken');
 
-        const { first_name, last_name, job_title, email, phone, address_line, birthday } = form;
+        const { username, email, password } = form;
 
         let submittedData = {
-            first_name: first_name,
-            last_name: last_name,
-            //  company: "",
-            //  department: "",
-            job_title: job_title,
-            // birthday: birthday,
-            categories: selectedCategory[0].value,
-            tags: [],
-            country: "Türkiye",
-            city: "Uşak",
-            district: "Merkez",
-            address_line: address_line,
-            phone: phone,
+            username: username,
             email: email,
-            website: "",
-            is_active: true,
-            //customer_representatives: [],
-            added_by: [1]
+            password: password,
         };
-
         try {
-            const response = await axios.post(BASE_URL + "persons/", submittedData, {
+            const response = await axios.post(BASE_URL + "users/", submittedData, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -302,10 +203,11 @@ const UserListPage = () => {
             });
             setData([response.data, ...data]);
             setView({ open: false });
-
+            console.log(submittedData)
             resetForm();
         } catch (error) {
             console.error("An error occurred:", error);
+            console.log(submittedData)
         }
     };
 
@@ -321,30 +223,15 @@ const UserListPage = () => {
         newItems.forEach((item) => {
             if (item.id === editId) {
                 submittedData = {
-                    first_name: formData.first_name,
-                    last_name: formData.last_name,
-                    // company: formData.company,
-                    // department: formData.department,
-                    // job_title: formData.job_title,
-                    //birthday: new Date(formData.birthday),
-                    // categories: formData.categories,
-                    //  tags: formData.tags,
-                    // country: formData.country,
-                    //  city: formData.city,
-                    // district: formData.district,
-                    // address_line: formData.address_line,
-                    // phone: formData.phone,
+                    id: formData.id,
+                    username: formData.username,
                     email: formData.email,
-                    //  website: formData.website,
-                    is_active: formData.is_active,
-                    // customer_representatives: formData.customer_representatives,
-                    added_by: [1]
                 };
             }
         });
 
         try {
-            const response = await axios.put(`${BASE_URL}persons/${editId}`, submittedData, {
+            const response = await axios.put(`${BASE_URL}users/${editId}`, submittedData, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -367,23 +254,9 @@ const UserListPage = () => {
             if (item.id === id) {
 
                 setFormData({
-                    first_name: item.first_name,
-                    last_name: item.last_name,
-                    company: item.company,
-                    department: item.department,
-                    job_title: item.job_title,
-                    birthday: new Date(item.birthday),
-                    categories: item.categories,
-                    tags: item.tags,
-                    country: item.country,
-                    city: item.city,
-                    district: item.district,
-                    address_line: item.address_line,
-                    phone: item.phone,
+                    id: item.id,
+                    username: item.username,
                     email: item.email,
-                    website: item.website,
-                    is_active: true,
-                    customer_representatives: item.customer_representatives,
 
                 });
             }
@@ -426,7 +299,7 @@ const UserListPage = () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            await axios.delete(`${BASE_URL}persons/${id}`, {
+            await axios.delete(`${BASE_URL}users?id=${id}`, {
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,
                     'Content-Type': 'application/json'
@@ -639,33 +512,19 @@ const UserListPage = () => {
                                                         </DataTableRow>
 
                                                         <DataTableRow size="md">
-                                                            <span className="tb-sub">{item.phone}</span>
+                                                            <span className="tb-sub">{item.username}</span>
                                                         </DataTableRow>
-                                                        <DataTableRow>
-                                                            {item.categories && item.categories.length > 0 && item.categories.map((category, index) => (
-                                                                <span key={index} className="badge bg-outline-secondary me-1">
-                                                                    {category.label}
-                                                                </span>
-                                                            ))}
-                                                        </DataTableRow>
-                                                        <DataTableRow>
-                                                            {item.tags && item.tags.length > 0 && item.tags.map((tag, index) => (
-                                                                <span key={index} className="badge bg-outline-secondary me-1">
-                                                                    {tag.label}
-                                                                </span>
-                                                            ))}
-                                                        </DataTableRow>
+
+
                                                         <DataTableRow size="md">
-                                                            <span className="tb-sub">{item.city}</span>
+                                                            <span className="tb-sub">{item.email}</span>
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
                                                             <img style={{ borderRadius: "50%", width: "25px" }} src={ProductH} alt="product" className="thumb" />
                                                             <span style={{ paddingLeft: "5px" }} className="tb-sub"></span>
                                                         </DataTableRow>
-                                                        <DataTableRow>
-                                                            <span className={`tb-status text-${item.is_active ? "success" : "danger"}`}>
-                                                                {item.is_active ? "Aktif" : "Pasif"}
-                                                            </span>
+                                                        <DataTableRow size="md">
+                                                            <span className="tb-sub">{item.username}</span>
                                                         </DataTableRow>
                                                         <DataTableRow className="nk-tb-col-tools">
                                                             <ul className="nk-tb-actions gx-1 my-n1">
@@ -765,218 +624,43 @@ const UserListPage = () => {
                             ></Icon>
                         </a>
                         <div className="p-2">
-                            <h5 className="title">Update Product</h5>
+                            <h5 className="title">Kullanıcıyı Düzenle</h5>
                             <div className="mt-4">
                                 <form noValidate onSubmit={handleSubmit(onEditSubmit)}>
                                     <Row className="g-3">
                                         <Col lg="4">
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="regular-price">
-                                                    Adı
+                                                    ID
                                                 </label>
                                                 <div className="form-control-wrap">
                                                     <input
                                                         type="text"
                                                         className="form-control"
-                                                        {...register('first_name', {
+                                                        {...register('id', {
                                                             required: "Lütfen alanları boş bırakmayınız",
                                                         })}
-                                                        value={formData.first_name}
-                                                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} />
-                                                    {errors.first_name && <span className="invalid">{errors.first_name.message}</span>}
+                                                        value={formData.id}
+                                                        onChange={(e) => setFormData({ ...formData, id: e.target.value })} />
+                                                    {errors.id && <span className="invalid">{errors.id.message}</span>}
                                                 </div>
                                             </div>
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="regular-price">
-                                                    Soyadı
+                                                    Kullanıcı Adı
                                                 </label>
                                                 <div className="form-control-wrap">
                                                     <input
                                                         type="text"
                                                         className="form-control"
-                                                        {...register('last_name', {
+                                                        {...register('username', {
                                                             required: "Lütfen alanları boş bırakmayınız",
                                                         })}
-                                                        value={formData.last_name}
-                                                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
-                                                    {errors.last_name && <span className="invalid">{errors.last_name.message}</span>}
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Şirket
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.company}
-                                                        onChange={(e) => setFormData({ ...formData, company: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Bölüm
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.department}
-                                                        onChange={(e) => setFormData({ ...formData, department: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Ünvan
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.job_title}
-                                                        onChange={(e) => setFormData({ ...formData, job_title: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Doğum Günü
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <DatePicker
-                                                        selected={formData.birthday}
-                                                        onChange={(e) => setFormData({ ...formData, birthday: e })}
-                                                        className="form-control"
-                                                        placeholderText="Doğum Tarihi"
-
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
-
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="category">
-                                                    Kategori
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        isMulti
-                                                        options={formattedCategories}
-                                                        value={formData.categories}
-                                                        onChange={(value) => setFormData({ ...formData, categories: value })}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="category">
-                                                    Etiketler
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        isMulti
-                                                        options={formattedTags}
-                                                        value={formData.tags}
-                                                        onChange={(value) => setFormData({ ...formData, tags: value })}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Ülke
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.country}
-                                                        onChange={(e) => setFormData({ ...formData, country: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Şehir
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.city}
-                                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    İlçe
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.district}
-                                                        onChange={(e) => setFormData({ ...formData, district: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Adres
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.address_line}
-                                                        onChange={(e) => setFormData({ ...formData, address_line: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Telefon
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.phone}
-                                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-
+                                                        value={formData.username}
+                                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
+                                                    {errors.username && <span className="invalid">{errors.username.message}</span>}
                                                 </div>
                                             </div>
                                         </Col>
@@ -996,52 +680,6 @@ const UserListPage = () => {
                                                 </div>
                                             </div>
                                         </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="regular-price">
-                                                    Website
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.website}
-                                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
-
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="category">
-                                                    Durum
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-
-                                                        options={durum}
-                                                        value={durum.find(option => option.value === formData.is_active)}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, is_active: selectedOption.value })}
-
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
-                                        <Col lg="4">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="category">
-                                                    Temsilci
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
-
-
-
                                         <Col size="12">
                                             <Button color="primary" type="submit">
 
@@ -1076,91 +714,19 @@ const UserListPage = () => {
                         <div className="nk-tnx-details mt-sm-3">
                             <Row className="gy-3">
                                 <Col lg={4}>
-                                    <span className="sub-text">Adı</span>
-                                    <span className="caption-text">{formData.first_name}</span>
+                                    <span className="sub-text">Id</span>
+                                    <span className="caption-text">{formData.id}</span>
                                 </Col>
                                 <Col lg={4}>
-                                    <span className="sub-text">Soyadı</span>
-                                    <span className="caption-text">{formData.last_name}</span>
+                                    <span className="sub-text">Kullanıcı Adı</span>
+                                    <span className="caption-text">{formData.username}</span>
                                 </Col>
                                 <Col lg={4}>
-                                    <span className="sub-text">Şirket</span>
-                                    <span className="caption-text">{formData.company}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Departman</span>
-                                    <span className="caption-text">{formData.department}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Ünvan</span>
-                                    <span className="caption-text">{formData.job_title}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Doğum Günü</span>
-                                    <span className="caption-text">{new Date(formData.birthday).toLocaleDateString('tr-TR')}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Kategori</span>
-                                    <span className="caption-text">
-                                        {formData.categories.map((item, index) => (
-                                            <span key={index} className="badge bg-outline-secondary me-1">
-                                                {item.label}
-                                            </span>
-                                        ))}
-                                    </span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Etiket</span>
-                                    <span className="caption-text">
-                                        {formData.tags.map((item, index) => (
-                                            <span key={index} className="badge bg-outline-secondary me-1">
-                                                {item.label}
-                                            </span>
-                                        ))}
-                                    </span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Ülke</span>
-                                    <span className="caption-text">{formData.country}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Şehir</span>
-                                    <span className="caption-text">{formData.city}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">İlçe</span>
-                                    <span className="caption-text">{formData.district}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Adres</span>
-                                    <span className="caption-text">{formData.address_line}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Telefon</span>
-                                    <span className="caption-text">{formData.phone}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">E-mail</span>
+                                    <span className="sub-text">Email</span>
                                     <span className="caption-text">{formData.email}</span>
                                 </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Website</span>
-                                    <span className="caption-text">{formData.website}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Durum</span>
-                                    <span className="caption-text">{formData.is_active ? "Aktif" : "Pasif"}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Temsilci</span>
-                                    <span className="caption-text">
-                                        {formData.customer_representatives.map((item, index) => (
-                                            <span key={index} className="badge bg-outline-secondary me-1">
-                                                {item}
-                                            </span>
-                                        ))}
-                                    </span>
-                                </Col>
+
+
 
                             </Row>
                         </div>
@@ -1239,7 +805,7 @@ const UserListPage = () => {
 
                                         <div className="form-control-wrap">
                                             <input
-                                                type="text"
+                                                type="password"
                                                 className="form-control"
                                                 {...register('password', {
                                                     required: "Lütfen boş bıraklın alanları doldurunuz.",
@@ -1251,23 +817,7 @@ const UserListPage = () => {
                                         </div>
                                     </div>
                                 </Col>
-                                <Col size="12">
-                                    <div className="form-group">
 
-                                        <div className="form-control-wrap">
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                {...register('password', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
-                                                })}
-                                                placeholder="Parola Tekrar"
-                                                value={formData.password}
-                                                onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-                                            {errors.password && <span className="invalid">{errors.password.message}</span>}
-                                        </div>
-                                    </div>
-                                </Col>
                                 <Col size="12">
                                     <div className="flex justify-end">
 

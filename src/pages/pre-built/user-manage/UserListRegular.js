@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { RSelect } from "../../../components/Component";
 import DatePicker from "react-datepicker";
 import api from '../../../api/api';
-import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody } from "reactstrap";
+import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, Alert } from "reactstrap";
 
 import {
   Block,
@@ -354,9 +354,28 @@ const UserListRegularPage = () => {
       setData([response.data, ...data]);
       setView({ open: false });
 
+      // Uyarıyı göster
+      setAlertMessage("Kişi başarıyla eklendi!");
+      setAlertColor("success");
+      setAlertVisible(true);
+
+      // 3 saniye sonra uyarıyı gizle
+      setTimeout(() => {
+        setAlertVisible(false);
+      }, 3000);
+
       resetForm();
     } catch (error) {
       console.error("An error occurred:", error);
+      // Hata uyarısını göster
+      setAlertMessage("Kişi eklenirken bir hata oluştu!");
+      setAlertColor("danger");
+      setAlertVisible(true);
+
+      // 3 saniye sonra uyarıyı gizle
+      setTimeout(() => {
+        setAlertVisible(false);
+      }, 3000);
     }
   };
 
@@ -404,13 +423,28 @@ const UserListRegularPage = () => {
         }
       });
 
-      // Veritabanı güncelleme başarılı olursa yerel veriyi güncelle
+      setAlertMessage("Kişi başarıyla güncellendi!");
+      setAlertColor("success");
+      setAlertVisible(true);
+
+      // 3 saniye sonra uyarıyı gizle
+      setTimeout(() => {
+        setAlertVisible(false);
+      }, 3000);
       newItems[index] = response.data;
       setData(newItems);
       resetForm();
       setView({ edit: false, add: false });
     } catch (error) {
       console.error('Veritabanını güncelleme sırasında hata oluştu:', error);
+      setAlertMessage("Kişi eklenirken bir hata oluştu!");
+      setAlertColor("danger");
+      setAlertVisible(true);
+
+      // 3 saniye sonra uyarıyı gizle
+      setTimeout(() => {
+        setAlertVisible(false);
+      }, 3000);
     }
   };
 
@@ -473,9 +507,11 @@ const UserListRegularPage = () => {
   const onFilterChange = (e) => {
     setSearchText(e.target.value);
   };
-
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertColor, setAlertColor] = useState("");
   // function to delete a product
-  const deleteProduct = async (id) => {
+  const deletePersons = async (id) => {
     let accessToken = localStorage.getItem('accessToken');
 
     try {
@@ -487,14 +523,26 @@ const UserListRegularPage = () => {
       });
       let updatedData = data.filter((item) => item.id !== id);
       setData([...updatedData]);
+      setAlertMessage("Müşteri Başarıyla Silindi!");
+      setAlertVisible(true);
+      setAlertColor("warning");
+
+      setTimeout(() => {
+        setAlertVisible(false);
+      }, 3000);
     } catch (error) {
       console.error("There was an error deleting the product!", error);
+      setAlertMessage("Kişi Silinirken Bir Hatayla Karşılaşıldı");
+      setAlertVisible(true);
+      setTimeout(() => {
+        setAlertVisible(false);
+      }, 3000);
     }
   };
 
 
   // function to delete the seletected item
-  const selectorDeleteProduct = () => {
+  const selectordeletePersons = () => {
     let newData;
     newData = data.filter((item) => item.check !== true);
     setData([...newData]);
@@ -526,6 +574,12 @@ const UserListRegularPage = () => {
     <>
       <Head title="Homepage"></Head>
       <Content>
+        {alertVisible && (
+          <Alert className="alert-icon" color={alertColor}>
+            <Icon name="alert-circle" />
+            <strong>{alertMessage.includes("hata") ? "Hata: " : "Başarılı: "}</strong> {alertMessage}
+          </Alert>
+        )}
         <BlockHead size="sm">
           <BlockBetween>
             <BlockHeadContent>
@@ -685,7 +739,7 @@ const UserListRegularPage = () => {
                                       href="#remove"
                                       onClick={(ev) => {
                                         ev.preventDefault();
-                                        selectorDeleteProduct();
+                                        selectordeletePersons();
                                       }}
                                     >
                                       <Icon name="trash"></Icon>
@@ -816,7 +870,7 @@ const UserListRegularPage = () => {
                                             href="#remove"
                                             onClick={(ev) => {
                                               ev.preventDefault();
-                                              deleteProduct(item.id);
+                                              deletePersons(item.id);
                                             }}
                                           >
                                             <Icon name="trash"></Icon>
@@ -1154,12 +1208,8 @@ const UserListRegularPage = () => {
                         </div>
                       </div>
                     </Col>
-
-
-
                     <Col size="12">
                       <Button color="primary" type="submit">
-
                         <span>Kişiyi Güncelle</span>
                       </Button>
                     </Col>

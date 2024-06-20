@@ -1,17 +1,17 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Content from "../../../layout/content/Content";
 import Head from "../../../layout/head/Head";
 import ProductH from "../../../images/avatar/a-sm.jpg"
-import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, CardBody, CardTitle } from "reactstrap";
+import { DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, CardBody, CardTitle } from "reactstrap";
 import DatePicker from "react-datepicker";
 import { useForm } from "react-hook-form";
-import { RSelect } from "../../../components/Component";
+
 import AddMeetModal from "./AddMeetModal";
 
 
 import {
   Block,
-  BlockDes,
+
   BlockHead,
   BlockHeadContent,
   BlockTitle,
@@ -25,7 +25,8 @@ import {
   DataTableItem,
   Row,
   PaginationComponent,
-  DataTable
+  RSelect
+
 
 } from "../../../components/Component";
 
@@ -69,6 +70,7 @@ const UserDetailsPage = () => {
       return null;
     }
   };
+
 
   const getAllUsers = async () => {
     let accessToken = localStorage.getItem('accessToken');
@@ -754,10 +756,10 @@ const UserDetailsPage = () => {
                             : null}
                         </DataTableBody>
                         <div className="card-inner">
-                          {originalContactHistory.length > 0 ? (
+                          {conversation.length > 0 ? (
                             <PaginationComponent
                               itemPerPage={itemPerPage}
-                              totalItems={originalContactHistory.length}
+                              totalItems={conversation.length}
                               paginate={paginate}
                               currentPage={currentPage}
                             />
