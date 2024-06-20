@@ -356,14 +356,13 @@ const UserListRegularPage = () => {
       setView({ open: false });
 
       // Uyarıyı göster
-      setAlertMessage("Kişi başarıyla eklendi!");
-      setAlertColor("success");
-      setAlertVisible(true);
-
-      // 3 saniye sonra uyarıyı gizle
-      setTimeout(() => {
-        setAlertVisible(false);
-      }, 3000);
+      Swal.fire({
+        icon: "success",
+        title: "Başarılı!",
+        text: "Kişi başarıyla eklendi!",
+        timer: 2000,
+        showConfirmButton: false
+      });
 
       resetForm();
     } catch (error) {
@@ -512,6 +511,21 @@ const UserListRegularPage = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertColor, setAlertColor] = useState("");
   // function to delete a product
+
+  const handleAdvanced3 = (id) => {
+    Swal.fire({
+      title: "Emin misiniz?",
+      text: "Bu işlemi geri alamazsınız!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Evet, sil!",
+      cancelButtonText: "Hayır, iptal et!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deletePersons(id);
+      }
+    });
+  };
   const deletePersons = async (id) => {
     let accessToken = localStorage.getItem('accessToken');
 
@@ -527,7 +541,7 @@ const UserListRegularPage = () => {
       Swal.fire({
         icon: "warning",
         title: "Başarılı!",
-        text: "Ürün başarıyla silindi!",
+        text: "Kişi başarıyla silindi!",
         timer: 2000,
         showConfirmButton: false
       });
@@ -873,7 +887,7 @@ const UserListRegularPage = () => {
                                             href="#remove"
                                             onClick={(ev) => {
                                               ev.preventDefault();
-                                              deletePersons(item.id);
+                                              handleAdvanced3(item.id)
                                             }}
                                           >
                                             <Icon name="trash"></Icon>
