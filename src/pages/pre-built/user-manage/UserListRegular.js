@@ -190,15 +190,22 @@ const UserListRegularPage = () => {
 
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
+  const [formattedCategories, setFormattedCategories] = useState([]);
   console.log(selectedCategory)
 
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      const formatted = categories.map(category => ({
+        value: category.id,
+        label: category.name,
+        type: category.type,
+        parent: category.parent
+      }));
+      setFormattedCategories(formatted);
+    }
+  }, [categories]);
   const [selectedTag, setSelectedTag] = useState([]);
-  const formattedCategories = categories.map(category => ({
-    value: category.id,
-    label: category.name,
-    type: category.type,
-    parent: category.parent
-  }));
   const formattedTags = tags.map(tag => ({
     value: tag.id,
     label: tag.name
@@ -394,22 +401,23 @@ const UserListRegularPage = () => {
           // company: formData.company,
           // department: formData.department,
           // job_title: formData.job_title,
-          //birthday: new Date(formData.birthday),
-          // categories: formData.categories,
-          //  tags: formData.tags,
+          // birthday: new Date(formData.birthday),
+          categories: formData.categories.map(category => category.value || category), // ID'leri alıyoruz
+          tags: formData.tags.map(tag => tag.value || tag), // ID'leri alıyoruz
           // country: formData.country,
-          //  city: formData.city,
+          // city: formData.city,
           // district: formData.district,
           // address_line: formData.address_line,
           // phone: formData.phone,
           email: formData.email,
-          //  website: formData.website,
+          // website: formData.website,
           is_active: formData.is_active,
           // customer_representatives: formData.customer_representatives,
           added_by: [1]
         };
       }
     });
+
 
     console.log(submittedData)
 
@@ -1049,11 +1057,13 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
-
                             isMulti
                             options={formattedCategories}
-                            value={formData.categories}
-                            onChange={(value) => setFormData({ ...formData, categories: value })}
+                            value={formData.categories.map(categoryId => formattedCategories.find(category => category.value === categoryId))}
+                            onChange={(selectedOptions) => setFormData({
+                              ...formData,
+                              categories: selectedOptions.map(option => option.value)
+                            })}
                           />
                         </div>
                       </div>
@@ -1061,14 +1071,17 @@ const UserListRegularPage = () => {
                     <Col lg="4">
                       <div className="form-group">
                         <label className="form-label">
-                          Etiketler
+                          Etiket
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
                             isMulti
                             options={formattedTags}
-                            value={formData.tags}
-                            onChange={(value) => setFormData({ ...formData, tags: value })}
+                            value={formData.tags.length > 0 ? formData.tags.map(tagId => formattedTags.find(tag => tag.value === tagId)) : []}
+                            onChange={(selectedOptions) => setFormData({
+                              ...formData,
+                              tags: selectedOptions ? selectedOptions.map(option => option.value) : []
+                            })}
                           />
                         </div>
                       </div>
@@ -1278,21 +1291,27 @@ const UserListRegularPage = () => {
                 <Col lg={4}>
                   <span className="sub-text">Kategori</span>
                   <span className="caption-text">
-                    {formData.categories.map((item, index) => (
-                      <span key={index} className="badge bg-outline-secondary me-1">
-                        {item.label}
-                      </span>
-                    ))}
+                    {formData.categories.map((categoryId, index) => {
+                      const category = categories.find(cat => cat.id === categoryId);
+                      return category ? (
+                        <span key={index} className="badge bg-outline-secondary me-1">
+                          {category.name}
+                        </span>
+                      ) : null;
+                    })}
                   </span>
                 </Col>
                 <Col lg={4}>
                   <span className="sub-text">Etiket</span>
                   <span className="caption-text">
-                    {formData.tags.map((item, index) => (
-                      <span key={index} className="badge bg-outline-secondary me-1">
-                        {item.label}
-                      </span>
-                    ))}
+                    {formData.tags.map((tagId, index) => {
+                      const tag = tags.find(cat => cat.id === tagId);
+                      return tag ? (
+                        <span key={index} className="badge bg-outline-secondary me-1">
+                          {tag.name}
+                        </span>
+                      ) : null;
+                    })}
                   </span>
                 </Col>
                 <Col lg={4}>
