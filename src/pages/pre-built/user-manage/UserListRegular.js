@@ -9,6 +9,9 @@ import { RSelect } from "../../../components/Component";
 import DatePicker from "react-datepicker";
 import api from '../../../api/api';
 import Swal from "sweetalert2";
+import { ToastContainer, toast } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
 import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, Alert } from "reactstrap";
 
 import {
@@ -356,13 +359,14 @@ const UserListRegularPage = () => {
       setView({ open: false });
 
       // Uyarıyı göster
-      Swal.fire({
-        icon: "success",
-        title: "Başarılı!",
-        text: "Kişi başarıyla eklendi!",
-        timer: 2000,
-        showConfirmButton: false
-      });
+      setAlertMessage("Kişi başarıyla eklendi!");
+      setAlertColor("success");
+      setAlertVisible(true);
+
+      // 3 saniye sonra uyarıyı gizle
+      setTimeout(() => {
+        setAlertVisible(false);
+      }, 3000);
 
       resetForm();
     } catch (error) {
@@ -512,20 +516,6 @@ const UserListRegularPage = () => {
   const [alertColor, setAlertColor] = useState("");
   // function to delete a product
 
-  const handleAdvanced3 = (id) => {
-    Swal.fire({
-      title: "Emin misiniz?",
-      text: "Bu işlemi geri alamazsınız!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Evet, sil!",
-      cancelButtonText: "Hayır, iptal et!"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        deletePersons(id);
-      }
-    });
-  };
   const deletePersons = async (id) => {
     let accessToken = localStorage.getItem('accessToken');
 
@@ -538,12 +528,14 @@ const UserListRegularPage = () => {
       });
       let updatedData = data.filter((item) => item.id !== id);
       setData([...updatedData]);
-      Swal.fire({
-        icon: "warning",
-        title: "Başarılı!",
-        text: "Kişi başarıyla silindi!",
-        timer: 2000,
-        showConfirmButton: false
+      toast.warning("Kişi Başarıyla Silindi", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: false,
       });
     } catch (error) {
       console.error("There was an error deleting the product!", error);
@@ -589,7 +581,7 @@ const UserListRegularPage = () => {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   return (
     <>
-      <Head title="Homepage"></Head>
+      <Head title="PersonPage"></Head>
       <Content>
         {alertVisible && (
           <Alert className="alert-icon" color={alertColor}>
@@ -597,6 +589,8 @@ const UserListRegularPage = () => {
             <strong>{alertMessage.includes("hata") ? "Hata: " : "Başarılı: "}</strong> {alertMessage}
           </Alert>
         )}
+
+        <ToastContainer />
         <BlockHead size="sm">
           <BlockBetween>
             <BlockHeadContent>
@@ -887,7 +881,7 @@ const UserListRegularPage = () => {
                                             href="#remove"
                                             onClick={(ev) => {
                                               ev.preventDefault();
-                                              handleAdvanced3(item.id)
+                                              deletePersons(item.id);
                                             }}
                                           >
                                             <Icon name="trash"></Icon>

@@ -57,7 +57,29 @@ const menu = [
     icon: "file-docs",
     text: "Tanımlamalar",
     active: false,
-    link: "/",
+
+    subMenu: [
+      {
+        text: "Kişiler",
+        link: "/kisi-tanimlamalari",
+      },
+      {
+        text: "Firmalar",
+        link: "/firma-tanimlamalari",
+      },
+      {
+        text: "Ürünler",
+        link: "/urun-tanimlamalari",
+      },
+      {
+        text: "Teklifler",
+        link: "/teklif-tanimlamalari",
+      },
+      {
+        text: "Satışlar",
+        link: "/satis-tanimlamalari",
+      },
+    ],
 
   },
   {
