@@ -158,7 +158,7 @@ const UserDetailsPage = () => {
   const [originalContactHistory, setOriginalContactHistory] = useState([]);
   const [conversation, setConversation] = useState([]);
   const currentItems = conversation
-  console.log(originalContactHistory)
+  console.log(conversation)
 
   const [sideBar, setSidebar] = useState(false);
   const [itemPerPage, setItemPerPage] = useState(10);

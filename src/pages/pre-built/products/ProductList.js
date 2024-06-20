@@ -146,6 +146,7 @@ const UserListRegularPage = () => {
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedProductType, setSelectedProductType] = useState();
   const [selectedTag, setSelectedTag] = useState([]);
+  console.log(selectedTag)
   const formattedCategories = categories.map(category => ({
     value: category.id,
     label: category.name
@@ -288,7 +289,7 @@ const UserListRegularPage = () => {
       name: name,
       purchase_price: purchase_price,
       sale_price: sale_price,
-      tags: [1],
+      tags: selectedTag.map((tag) => tag.value),
       tax_rate: "20.00",
       product_type: selectedProductType.name
     };

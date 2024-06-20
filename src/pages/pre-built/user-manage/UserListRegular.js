@@ -186,6 +186,7 @@ const UserListRegularPage = () => {
 
   }, [])
   const [categories, setCategories] = useState([]);
+  console.log(categories)
 
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
@@ -325,15 +326,8 @@ const UserListRegularPage = () => {
       //  department: "",
       job_title: job_title,
       //birthday: birthday,
-      categories: selectedCategory.map((category) => (
-        {
-          id: category.value,
-          name: category.label,
-          type: category.type,
-          parent: category.parent
-        }
-      )),
-      tags: [],
+      categories: selectedCategory.map((category) => category.value),
+      tags: selectedTag.map((tag) => tag.value),
       country: "Türkiye",
       city: "Uşak",
       district: "Merkez",
@@ -808,18 +802,24 @@ const UserListRegularPage = () => {
                               <span className="tb-sub">{item.phone}</span>
                             </DataTableRow>
                             <DataTableRow>
-                              {item.categories && item.categories.length > 0 && item.categories.map((category, index) => (
-                                <span key={index} className="badge bg-outline-secondary me-1">
-                                  {category.label}
-                                </span>
-                              ))}
+                              {item.categories && item.categories.length > 0 && item.categories.map((categoryId, index) => {
+                                const category = categories.find(cat => cat.id === categoryId);
+                                return category ? (
+                                  <span key={index} className="badge bg-outline-secondary me-1">
+                                    {category.name}
+                                  </span>
+                                ) : null;
+                              })}
                             </DataTableRow>
                             <DataTableRow>
-                              {item.tags && item.tags.length > 0 && item.tags.map((tag, index) => (
-                                <span key={index} className="badge bg-outline-secondary me-1">
-                                  {tag.label}
-                                </span>
-                              ))}
+                              {item.tags && item.tags.length > 0 && item.tags.map((tagId, index) => {
+                                const tag = tags.find(tag => tag.id === tagId);
+                                return tag ? (
+                                  <span key={index} className="badge bg-outline-secondary me-1">
+                                    {tag.name}
+                                  </span>
+                                ) : null;
+                              })}
                             </DataTableRow>
                             <DataTableRow size="md">
                               <span className="tb-sub">{item.city}</span>
