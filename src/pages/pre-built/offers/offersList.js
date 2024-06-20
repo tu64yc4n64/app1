@@ -532,9 +532,8 @@ const OfferListPage = () => {
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
                                                             {item.tags.map((tag, id) => (
-                                                                <span key={id} className="badge text-center bg-outline-secondary">{tag}</span>
+                                                                <span key={id} className="badge text-center bg-outline-secondary me-1">{tag.name}</span>
                                                             ))}
-
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
                                                             <span className="tb-sub">{item.created_at}</span>
@@ -543,10 +542,8 @@ const OfferListPage = () => {
                                                             <span className="badge bg-outline-secondary">{item.status}</span>
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
-
                                                             <span style={{ paddingLeft: "5px" }} className="tb-sub">{item.created_by}</span>
                                                         </DataTableRow>
-
                                                         <DataTableRow className="nk-tb-col-tools">
                                                             <ul className="nk-tb-actions gx-1 my-n1">
                                                                 <li className="me-n1">
@@ -609,6 +606,7 @@ const OfferListPage = () => {
                                                             </ul>
                                                         </DataTableRow>
                                                     </DataTableItem>
+
                                                 );
                                             })
                                             : null}
