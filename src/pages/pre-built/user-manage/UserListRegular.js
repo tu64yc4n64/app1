@@ -1025,10 +1025,8 @@ const UserListRegularPage = () => {
                             id="unvan1"
                             type="text"
                             className="form-control"
-
                             value={formData.job_title}
                             onChange={(e) => setFormData({ ...formData, job_title: e.target.value })} />
-
                         </div>
                       </div>
                     </Col>

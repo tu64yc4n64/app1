@@ -41,7 +41,7 @@ const UserListRegularPage = () => {
 
   const getAllCategories = async () => {
     try {
-      const response = await axios.get(BASE_URL + "categories?type=person", {
+      const response = await axios.get(BASE_URL + "categories", {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`
@@ -54,7 +54,7 @@ const UserListRegularPage = () => {
   };
   const getAllTags = async () => {
     try {
-      const response = await axios.get(BASE_URL + "tags?type=person", {
+      const response = await axios.get(BASE_URL + "tags", {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`
