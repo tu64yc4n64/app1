@@ -26,7 +26,7 @@ import axios from "axios";
 
 const BASE_URL = "https://tiosone.com/sales/api/";
 
-const SalesDefinitions = () => {
+const OffersDefinitions = () => {
     const [data, setCategoryData] = useState([]);
     const [dataTags, setCategoryDataTags] = useState([]);
     console.log(dataTags)
@@ -62,7 +62,7 @@ const SalesDefinitions = () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            const response = await axios.get(BASE_URL + "categories", {
+            const response = await axios.get(BASE_URL + "categories?type=sales", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -74,7 +74,7 @@ const SalesDefinitions = () => {
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
                     try {
-                        const response = await axios.get(BASE_URL + "categories", {
+                        const response = await axios.get(BASE_URL + "categories?type=sales", {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${accessToken}`
@@ -95,7 +95,7 @@ const SalesDefinitions = () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            const response = await axios.get(BASE_URL + "tags", {
+            const response = await axios.get(BASE_URL + "tags?type=sales", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -107,7 +107,7 @@ const SalesDefinitions = () => {
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
                     try {
-                        const response = await axios.get(BASE_URL + "tags", {
+                        const response = await axios.get(BASE_URL + "tags?type=sales", {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${accessToken}`
@@ -176,7 +176,7 @@ const SalesDefinitions = () => {
         let submittedData = {
             name: name,
             description: description,
-            type: type.find(option => option.value === formData.type)?.value,
+            type: "sales",
             parent: selectedCategory.value,
         };
         try {
@@ -220,7 +220,7 @@ const SalesDefinitions = () => {
         let submittedData = {
             name: name,
             description: description,
-            type: type.find(option => option.value === formData.type)?.value,
+            type: "sales",
         };
 
         try {
@@ -578,7 +578,7 @@ const SalesDefinitions = () => {
                                                                 <DataTableRow>
                                                                     {item.parent && (
                                                                         <span className="badge bg-outline-secondary me-1">
-                                                                            {data.find(cat => cat.id === item.parent)?.name || "Üst kategori bulunamadı"}
+                                                                            {data.find(cat => cat.id === item.parent)?.name}
                                                                         </span>
                                                                     )}
                                                                 </DataTableRow>
@@ -750,23 +750,7 @@ const SalesDefinitions = () => {
                                                 </div>
                                             </div>
                                         </Col>
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)} // Düzenlenmiş value özelliği
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
                                         <Col lg="6">
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="description">
@@ -868,23 +852,7 @@ const SalesDefinitions = () => {
                                                 </div>
                                             </div>
                                         </Col>
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
 
                                         <Col size="12">
                                             <Button color="primary" type="submit">
@@ -935,23 +903,7 @@ const SalesDefinitions = () => {
                                             </div>
                                         </Col>
 
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)} // Düzenlenmiş value özelliği
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
                                         <Col lg="6">
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="description">
@@ -1035,23 +987,7 @@ const SalesDefinitions = () => {
                                                 </div>
                                             </div>
                                         </Col>
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
 
                                         <Col size="12">
                                             <Button color="primary" type="submit">
@@ -1070,4 +1006,4 @@ const SalesDefinitions = () => {
         </>
     );
 };
-export default SalesDefinitions;
+export default OffersDefinitions;

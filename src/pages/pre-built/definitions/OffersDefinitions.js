@@ -62,7 +62,7 @@ const OffersDefinitions = () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            const response = await axios.get(BASE_URL + "categories", {
+            const response = await axios.get(BASE_URL + "categories?type=offer", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -74,7 +74,7 @@ const OffersDefinitions = () => {
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
                     try {
-                        const response = await axios.get(BASE_URL + "categories", {
+                        const response = await axios.get(BASE_URL + "categories?type=offer", {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${accessToken}`
@@ -95,7 +95,7 @@ const OffersDefinitions = () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            const response = await axios.get(BASE_URL + "tags", {
+            const response = await axios.get(BASE_URL + "tags?type=offer", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -107,7 +107,7 @@ const OffersDefinitions = () => {
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
                     try {
-                        const response = await axios.get(BASE_URL + "tags", {
+                        const response = await axios.get(BASE_URL + "tags?type=offer", {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${accessToken}`
@@ -176,7 +176,7 @@ const OffersDefinitions = () => {
         let submittedData = {
             name: name,
             description: description,
-            type: type.find(option => option.value === formData.type)?.value,
+            type: "offer",
             parent: selectedCategory.value,
         };
         try {
@@ -220,7 +220,7 @@ const OffersDefinitions = () => {
         let submittedData = {
             name: name,
             description: description,
-            type: type.find(option => option.value === formData.type)?.value,
+            type: "offer",
         };
 
         try {
@@ -750,23 +750,7 @@ const OffersDefinitions = () => {
                                                 </div>
                                             </div>
                                         </Col>
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)} // Düzenlenmiş value özelliği
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
                                         <Col lg="6">
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="description">
@@ -868,23 +852,7 @@ const OffersDefinitions = () => {
                                                 </div>
                                             </div>
                                         </Col>
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
 
                                         <Col size="12">
                                             <Button color="primary" type="submit">
@@ -935,23 +903,7 @@ const OffersDefinitions = () => {
                                             </div>
                                         </Col>
 
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)} // Düzenlenmiş value özelliği
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
                                         <Col lg="6">
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="description">
@@ -1035,23 +987,7 @@ const OffersDefinitions = () => {
                                                 </div>
                                             </div>
                                         </Col>
-                                        <Col lg="6">
-                                            <div className="form-group">
-                                                <label className="form-label" htmlFor="type">
-                                                    Tip
-                                                </label>
-                                                <div className="form-control-wrap">
-                                                    <RSelect
-                                                        name="type"
-                                                        id="type"
-                                                        placeholder="Tip Seçin"
-                                                        options={type}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, type: selectedOption.value })}
-                                                        value={type.find(option => option.value === formData.type)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </Col>
+
 
                                         <Col size="12">
                                             <Button color="primary" type="submit">
