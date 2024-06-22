@@ -36,8 +36,9 @@ const BASE_URL = "https://tiosone.com/sales/api/"
 
 const OfferListPage = () => {
     const [data, setData] = useState([]);
+    console.log(data)
     const [originalData, setOriginalData] = useState([]);
-    console.log(data);
+
 
     const refreshAccessToken = async () => {
         const refreshToken = localStorage.getItem('refreshToken');
@@ -104,10 +105,10 @@ const OfferListPage = () => {
 
     useEffect(() => {
         getAllOffers();
+
     }, []);
 
     const [sm, updateSm] = useState(false);
-    const [startDate, setStartDate] = useState("");
     const [itemPerPage, setItemPerPage] = useState(10);
     const [onSearch, setonSearch] = useState(true);
 
@@ -382,26 +383,19 @@ const OfferListPage = () => {
                                 </a>
                                 <div className="toggle-expand-content" style={{ display: sm ? "block" : "none" }}>
                                     <ul className="nk-block-tools g-3">
-
-
                                         <li className="nk-block-tools-opt">
                                             <Button
                                                 className="toggle btn btn-primary d-md-none"
                                                 color="primary"
-
                                             >
                                                 <Link style={{ color: "white" }} to={`${process.env.PUBLIC_URL}/teklif-olustur`}>
                                                     Yeni Teklif Oluştur
                                                 </Link>
-
                                             </Button>
                                             <Button
                                                 className="toggle d-none d-md-inline-flex"
                                                 color="primary"
-
                                             >
-
-
                                                 <Link style={{ color: "white" }} to={`${process.env.PUBLIC_URL}/teklif-olustur`}>
                                                     Yeni Teklif Oluştur
                                                 </Link>
@@ -506,18 +500,18 @@ const OfferListPage = () => {
                                                     <DataTableItem key={item.id}>
                                                         <DataTableRow>
                                                             <Link to={`${process.env.PUBLIC_URL}/teklif-detay/${item.id}`}>
-                                                                <span className="tb-product" style={{ flexDirection: "column", display: "flex" }}>
+                                                                <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
                                                                     <span className="title">{item.id}</span>
                                                                 </span>
                                                             </Link>
                                                         </DataTableRow>
                                                         <DataTableRow>
-                                                            <span className="tb-product" style={{ flexDirection: "column", display: "flex" }}>
+                                                            <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
                                                                 <span className="title">{item.title}</span>
                                                             </span>
                                                         </DataTableRow>
                                                         <DataTableRow>
-                                                            <span className="tb-product" style={{ flexDirection: "column", display: "flex" }}>
+                                                            <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
                                                                 <span className="title">{item.customer_name}</span>
                                                             </span>
                                                         </DataTableRow>

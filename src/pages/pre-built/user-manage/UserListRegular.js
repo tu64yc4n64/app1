@@ -73,6 +73,8 @@ const UserListRegularPage = () => {
           } catch (retryError) {
             console.error("Retry error after refreshing token", retryError);
           }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
         }
       } else {
         console.error("There was an error fetching the data!", error);
@@ -106,6 +108,8 @@ const UserListRegularPage = () => {
           } catch (retryError) {
             console.error("Retry error after refreshing token", retryError);
           }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
         }
       } else {
         console.error("There was an error fetching the data!", error);
@@ -116,9 +120,9 @@ const UserListRegularPage = () => {
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
 
-
     if (!refreshToken) {
       console.error('No refresh token found in local storage.');
+      window.location.href = '/auth-login'; // Refresh token yoksa login sayfasına yönlendir
       return null;
     }
 
@@ -136,7 +140,7 @@ const UserListRegularPage = () => {
     } catch (error) {
       if (error.response && error.response.status === 401) {
         console.error("Refresh token is invalid or expired. User needs to re-login.");
-        window.location.href = '/auth-login';
+        window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
       } else {
         console.error("Error refreshing access token", error);
       }
@@ -144,9 +148,9 @@ const UserListRegularPage = () => {
     }
   };
 
+
   const getAllUsers = async () => {
     let accessToken = localStorage.getItem('accessToken');
-
 
     try {
       const response = await axios.get(BASE_URL + "persons/", {
@@ -159,10 +163,8 @@ const UserListRegularPage = () => {
       setOriginalData(response.data);
     } catch (error) {
       if (error.response && error.response.status === 401) {
-
         accessToken = await refreshAccessToken();
         if (accessToken) {
-
           try {
             const response = await axios.get(BASE_URL + "persons/", {
               headers: {
@@ -175,6 +177,8 @@ const UserListRegularPage = () => {
           } catch (retryError) {
             console.error("Retry error after refreshing token", retryError);
           }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
         }
       } else {
         console.error("There was an error fetching the data!", error);
@@ -183,6 +187,8 @@ const UserListRegularPage = () => {
   };
   useEffect(() => {
     getAllUsers()
+    getAllCategories()
+    getAllTags()
 
   }, [])
   const [categories, setCategories] = useState([]);
@@ -217,14 +223,7 @@ const UserListRegularPage = () => {
   const handleTagChange = (selectedOptions) => {
     setSelectedTag(selectedOptions);
   };
-  useEffect(() => {
-    getAllCategories()
 
-  }, [])
-  useEffect(() => {
-    getAllTags()
-
-  }, [])
   const [sm, updateSm] = useState(false);
   const [tablesm, updateTableSm] = useState(false);
   const [startDate, setStartDate] = useState();
