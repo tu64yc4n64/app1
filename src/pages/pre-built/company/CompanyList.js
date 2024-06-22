@@ -272,7 +272,7 @@ const CompanyList = () => {
         setFormData({
             name: "",
             industry: "",
-            size: "",
+            size: null,
             categories: [],
             tags: [],
             tax_number: "",
@@ -298,8 +298,8 @@ const CompanyList = () => {
 
         let submittedData = {
             name: name,
-            industry: industry,
-            size: size,
+            industry: industry || "",
+            size: size || null,
             //  categories: [],
             //  tags: [],
             // added_by: "admin",
@@ -311,11 +311,12 @@ const CompanyList = () => {
             //  district: "Pamukkale",
             //  address_line: address_line,
             //  phone: phone,
-            email: email,
+            email: email || "",
             //  website: "http://johndoe.com",
             // is_active: true,
             // customer_representatives: [1]
         };
+        console.log(submittedData)
 
 
         try {
@@ -387,7 +388,7 @@ const CompanyList = () => {
                 setFormData({
                     name: item.name,
                     industry: item.industry,
-                    size: item.size,
+                    size: item.size || null,
                     categories: item.categories,
                     tags: item.tags,
                     tax_number: item.tax_number,
@@ -1236,7 +1237,7 @@ const CompanyList = () => {
 
                                         <div className="form-control-wrap">
                                             <input
-                                                type="text"
+                                                type="number"
                                                 className="form-control"
                                                 placeholder="Büyüklüğü"
                                                 id="buyukluk"

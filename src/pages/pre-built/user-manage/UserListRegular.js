@@ -1379,7 +1379,7 @@ const UserListRegularPage = () => {
                   <div className="form-group">
                     <label htmlFor="kullanici-adi" className="form-label text-soft">
 
-                      Adı
+                      Adı*
 
                     </label>
                     <div className="form-control-wrap">
@@ -1400,7 +1400,7 @@ const UserListRegularPage = () => {
                   <div className="form-group">
                     <label htmlFor="soyadi" className="form-label text-soft">
 
-                      Soyadı
+                      Soyadı*
 
                     </label>
                     <div className="form-control-wrap">
@@ -1442,7 +1442,7 @@ const UserListRegularPage = () => {
                   <div className="form-group">
                     <label htmlFor="mail" className="form-label text-soft">
 
-                      Email Adresi
+                      Email Adresi*
 
                     </label>
                     <div className="form-control-wrap">

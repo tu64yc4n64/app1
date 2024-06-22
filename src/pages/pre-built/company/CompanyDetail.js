@@ -366,7 +366,7 @@ const CompanyDetailPage = () => {
                         <BlockBetween>
                             <BlockHeadContent>
                                 <BlockTitle tag="h3" page>
-                                    Firmalar / <strong className=" small">{company.first_name} {company.last_name}</strong>
+                                    Firmalar / <strong className=" small">{company.name}</strong>
 
                                 </BlockTitle>
                                 <span className="badge bg-outline-secondary">{company.category}</span>

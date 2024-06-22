@@ -153,13 +153,13 @@ const UserListRegularPage = () => {
   }));
   const product_type = [{
     value: 1,
-    label: "Service",
+    label: "Servis",
     name: "service"
 
   },
   {
     value: 2,
-    label: "Product",
+    label: "Ürün",
     name: "product"
   }]
   const formattedTags = tags.map(tag => ({
@@ -1048,6 +1048,24 @@ const UserListRegularPage = () => {
           <Block>
             <form onSubmit={handleSubmit(onFormSubmit)}>
               <Row className="g-3">
+
+                <Col size="6">
+                  <div className="form-group">
+                    <label className="form-label text-soft">
+
+                      Türü
+
+                    </label>
+                    <div className="form-control-wrap">
+                      <RSelect
+                        name="type"
+                        placeholder="Türü"
+                        options={product_type}
+                        value={selectedProductType}
+                        onChange={(selectedOption) => handleProductTypeChange(selectedOption)} />
+                    </div>
+                  </div>
+                </Col>
                 <Col size="6">
                   <div className="form-group">
                     <label htmlFor="urun-adi" className="form-label text-soft">
@@ -1067,23 +1085,6 @@ const UserListRegularPage = () => {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                       {errors.name && <span className="invalid">{errors.name.message}</span>}
-                    </div>
-                  </div>
-                </Col>
-                <Col size="6">
-                  <div className="form-group">
-                    <label className="form-label text-soft">
-
-                      Türü
-
-                    </label>
-                    <div className="form-control-wrap">
-                      <RSelect
-                        name="type"
-                        placeholder="Türü"
-                        options={product_type}
-                        value={selectedProductType}
-                        onChange={(selectedOption) => handleProductTypeChange(selectedOption)} />
                     </div>
                   </div>
                 </Col>

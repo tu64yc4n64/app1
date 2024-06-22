@@ -3,7 +3,7 @@ const menu = [
     heading: "Menü",
   },
   {
-    icon: "dashlite",
+    icon: "home",
     text: "Anasayfa",
     link: "/",
   },
@@ -15,35 +15,35 @@ const menu = [
 
   },
   {
-    icon: "users",
+    icon: "building",
     text: "Firmalar",
     link: "/firmalar",
     active: false,
 
   },
   {
-    icon: "card-view",
+    icon: "package",
     text: "Ürünler",
     active: false,
     link: "/urunler",
 
   },
   {
-    icon: "card-view",
+    icon: "file-docs",
     text: "Teklifler",
     active: false,
     link: "/teklifler",
 
   },
   {
-    icon: "card-view",
+    icon: "file-check",
     text: "Satışlar",
     active: false,
     link: "/satislar",
 
   },
   {
-    icon: "card-view",
+    icon: "bar-chart-alt",
     text: "Raporlar",
     active: false,
     link: "/",
@@ -54,7 +54,7 @@ const menu = [
     heading: "Sistem",
   },
   {
-    icon: "file-docs",
+    icon: "server",
     text: "Tanımlamalar",
     active: false,
 
@@ -83,14 +83,14 @@ const menu = [
 
   },
   {
-    icon: "file-docs",
+    icon: "users",
     text: "Kullanıcılar",
     active: false,
     link: "/kullanicilar",
 
   },
   {
-    icon: "file-docs",
+    icon: "setting-alt",
     text: "Ayarlar",
     active: false,
     link: "/",
