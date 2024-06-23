@@ -43,9 +43,115 @@ const UserListRegularPage = () => {
 
 
   const [data, setData] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
 
 
-  console.log(data)
+  console.log(regions)
+
+  const getAllRegions = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    try {
+      const response = await axios.get("https://tiosone.com/hub/api/regions/", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setRegions(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get("https://tiosone.com/hub/api/regions/", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setRegions(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
+  const getAllCountries = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    try {
+      const response = await axios.get("https://tiosone.com/hub/api/countries/", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setCountries(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get("https://tiosone.com/hub/api/countries/", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setCountries(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
+  const getAllCities = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    try {
+      const response = await axios.get("https://tiosone.com/hub/api/cities/", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setCities(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get("https://tiosone.com/hub/api/cities/", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setCities(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
 
   const getAllCategories = async () => {
     let accessToken = localStorage.getItem('accessToken');
@@ -189,33 +295,42 @@ const UserListRegularPage = () => {
     getAllUsers()
     getAllCategories()
     getAllTags()
+    getAllRegions()
+    getAllCountries()
+    getAllCities()
 
   }, [])
+
+  const formatDate = (date) => {
+    if (!date) return '';
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Aylar 0'dan başlar, bu yüzden +1 eklenir
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDataForSelect = (data, labelKey, valueKey) => {
+    return data.map(item => ({
+      value: item[valueKey],
+      label: item[labelKey]
+    }));
+  };
   const [categories, setCategories] = useState([]);
-  console.log(categories)
-
   const [tags, setTags] = useState([]);
+  const formattedCategories = formatDataForSelect(categories, "name", "id");
+  const formattedTags = formatDataForSelect(tags, "name", "id");
+  const formattedRegions = formatDataForSelect(regions, "display_name", "id");
+
+  const formattedCities = formatDataForSelect(cities, "display_name", "id");
+  const formattedCountries = formatDataForSelect(countries, "name", "id");
+
+
+
+
   const [selectedCategory, setSelectedCategory] = useState([]);
-  const [formattedCategories, setFormattedCategories] = useState([]);
-  console.log(selectedCategory)
 
 
-  useEffect(() => {
-    if (categories.length > 0) {
-      const formatted = categories.map(category => ({
-        value: category.id,
-        label: category.name,
-        type: category.type,
-        parent: category.parent
-      }));
-      setFormattedCategories(formatted);
-    }
-  }, [categories]);
   const [selectedTag, setSelectedTag] = useState([]);
-  const formattedTags = tags.map(tag => ({
-    value: tag.id,
-    label: tag.name
-  }));
   const handleCategoryChange = (selectedOptions) => {
     setSelectedCategory(selectedOptions);
   };
@@ -225,7 +340,6 @@ const UserListRegularPage = () => {
   };
 
   const [sm, updateSm] = useState(false);
-  const [tablesm, updateTableSm] = useState(false);
   const [startDate, setStartDate] = useState();
   const [itemPerPage, setItemPerPage] = useState(10);
   const [onSearch, setonSearch] = useState(true);
@@ -242,9 +356,9 @@ const UserListRegularPage = () => {
     birthday: "",
     categories: [],
     tags: [],
-    country: "",
-    city: "",
-    district: "",
+    country: [],
+    city: [],
+    district: [],
     address_line: "",
     phone: "",
     email: "",
@@ -299,9 +413,9 @@ const UserListRegularPage = () => {
       birthday: "",
       categories: [],
       tags: [],
-      country: "",
-      city: "",
-      district: "",
+      country: [],
+      city: [],
+      district: [],
       address_line: "",
       phone: "",
       email: "",
@@ -313,12 +427,6 @@ const UserListRegularPage = () => {
     reset({});
   };
 
-  const formatDate = (date) => {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Aylar 0-11 arasıdır
-    const year = date.getFullYear();
-    return `${year}/${month}/${day}`;
-  };
 
   const onFormSubmit = async (form) => {
     let accessToken = localStorage.getItem('accessToken');
@@ -331,12 +439,12 @@ const UserListRegularPage = () => {
       //  company: "",
       //  department: "",
       job_title: job_title,
-      //birthday: birthday,
+      // birthday: formatDate(birthday),
       categories: selectedCategory.map((category) => category.value),
       tags: selectedTag.map((tag) => tag.value),
-      country: "Türkiye",
-      city: "Uşak",
-      district: "Merkez",
+      country: formData.country,
+      city: formData.city,
+      district: formData.district,
       address_line: address_line,
       phone: phone,
       email: email,
@@ -358,28 +466,37 @@ const UserListRegularPage = () => {
       setData([response.data, ...data]);
       setView({ open: false });
 
-      // Uyarıyı göster
-      setAlertMessage("Kişi başarıyla eklendi!");
-      setAlertColor("success");
-      setAlertVisible(true);
-
-      // 3 saniye sonra uyarıyı gizle
-      setTimeout(() => {
-        setAlertVisible(false);
-      }, 3000);
+      toast.success("Kişi Başarıyla Eklendi", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: false,
+      });
 
       resetForm();
     } catch (error) {
-      console.error("An error occurred:", error);
-      // Hata uyarısını göster
-      setAlertMessage("Kişi eklenirken bir hata oluştu!");
-      setAlertColor("danger");
-      setAlertVisible(true);
-
-      // 3 saniye sonra uyarıyı gizle
-      setTimeout(() => {
-        setAlertVisible(false);
-      }, 3000);
+      if (error.response) {
+        console.error("Response Error:", error.response.data);
+        console.error("Response Status:", error.response.status);
+        console.error("Response Headers:", error.response.headers);
+      } else if (error.request) {
+        console.error("Request Error:", error.request);
+      } else {
+        console.error("Error Message:", error.message);
+      }
+      console.error("Error Config:", error.config);
+      toast.error("Kişi Başarıyla Eklendi", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: false,
+      });
     }
   };
 
@@ -1106,13 +1223,7 @@ const UserListRegularPage = () => {
                           Şehir
                         </label>
                         <div className="form-control-wrap">
-                          <input
-                            id="sehir"
-                            type="text"
-                            className="form-control"
 
-                            value={formData.city}
-                            onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
 
                         </div>
                       </div>
@@ -1568,7 +1679,7 @@ const UserListRegularPage = () => {
                   <div className="form-group">
                     <label className="form-label text-soft">
 
-                      Kategorii
+                      Kategori
 
                     </label>
 
@@ -1632,7 +1743,7 @@ const UserListRegularPage = () => {
                     </div>
                   </div>
                 </Col>
-                <Col size="6">
+                <Col size="12">
                   <div className="form-group">
                     <label className="form-label text-soft">
 
@@ -1642,16 +1753,19 @@ const UserListRegularPage = () => {
 
                     <div className="form-control-wrap">
                       <RSelect
-                        name="category"
-                        isMulti
+                        name="sehir"
+
                         placeholder="Şehir"
+                        options={formattedRegions}
+                        onChange={(value) => setFormData({ ...formData, city: value })}
+
 
                       />
 
                     </div>
                   </div>
                 </Col>
-                <Col size="6">
+                <Col size="12">
                   <div className="form-group">
                     <label className="form-label text-soft">
 
@@ -1661,16 +1775,19 @@ const UserListRegularPage = () => {
 
                     <div className="form-control-wrap">
                       <RSelect
-                        name="category"
-                        isMulti
+                        name="ilce"
+
                         placeholder="İlçe"
+                        options={formattedCities}
+                        onChange={(value) => setFormData({ ...formData, disrict: value })}
+
 
                       />
 
                     </div>
                   </div>
                 </Col>
-                <Col size="6">
+                <Col size="12">
                   <div className="form-group">
                     <label className="form-label text-soft">
 
@@ -1680,9 +1797,12 @@ const UserListRegularPage = () => {
 
                     <div className="form-control-wrap">
                       <RSelect
-                        name="category"
-                        isMulti
+                        name="ulke"
+
                         placeholder="Ülke"
+                        options={formattedCountries}
+                        onChange={(value) => setFormData({ ...formData, country: value })}
+
 
                       />
 
