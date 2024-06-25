@@ -41,14 +41,44 @@ const BASE_URL = "https://tiosone.com/customers/api/"
 
 const UserListRegularPage = () => {
 
-
   const [data, setData] = useState([]);
+  const [user, setUser] = useState([]);
   const [regions, setRegions] = useState([]);
   const [countries, setCountries] = useState([]);
   const [cities, setCities] = useState([]);
 
+  console.log(data)
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
 
-  console.log(regions)
+    if (!refreshToken) {
+      console.error('No refresh token found in local storage.');
+      window.location.href = '/auth-login'; // Refresh token yoksa login sayfasına yönlendir
+      return null;
+    }
+
+    try {
+      const response = await axios.post("https://tiosone.com/api/token/refresh/", {
+        refresh: refreshToken
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const newAccessToken = response.data.access;
+      localStorage.setItem('accessToken', newAccessToken);
+      return newAccessToken;
+    } catch (error) {
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.error("Refresh token is invalid or expired. User needs to re-login.");
+        window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+      } else {
+        console.error("Error refreshing access token", error);
+      }
+      return null;
+    }
+  };
+
 
   const getAllRegions = async () => {
     let accessToken = localStorage.getItem('accessToken');
@@ -84,6 +114,7 @@ const UserListRegularPage = () => {
       }
     }
   };
+
   const getAllCountries = async () => {
     let accessToken = localStorage.getItem('accessToken');
 
@@ -223,39 +254,11 @@ const UserListRegularPage = () => {
     }
   };
 
-  const refreshAccessToken = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-
-    if (!refreshToken) {
-      console.error('No refresh token found in local storage.');
-      window.location.href = '/auth-login'; // Refresh token yoksa login sayfasına yönlendir
-      return null;
-    }
-
-    try {
-      const response = await axios.post("https://tiosone.com/api/token/refresh/", {
-        refresh: refreshToken
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      const newAccessToken = response.data.access;
-      localStorage.setItem('accessToken', newAccessToken);
-      return newAccessToken;
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        console.error("Refresh token is invalid or expired. User needs to re-login.");
-        window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
-      } else {
-        console.error("Error refreshing access token", error);
-      }
-      return null;
-    }
-  };
 
 
-  const getAllUsers = async () => {
+
+
+  const getAllPersons = async () => {
     let accessToken = localStorage.getItem('accessToken');
 
     try {
@@ -291,13 +294,51 @@ const UserListRegularPage = () => {
       }
     }
   };
+
+
+  const getAllUsers = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+
+    try {
+      const response = await axios.get("https://tiosone.com/users/api/users/", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setUser(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+
+          try {
+            const response = await axios.get("https://tiosone.com/users/api/users/", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setUser(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
   useEffect(() => {
-    getAllUsers()
+    getAllPersons()
     getAllCategories()
     getAllTags()
     getAllRegions()
     getAllCountries()
     getAllCities()
+    getAllUsers()
 
   }, [])
 
@@ -323,21 +364,40 @@ const UserListRegularPage = () => {
 
   const formattedCities = formatDataForSelect(cities, "display_name", "id");
   const formattedCountries = formatDataForSelect(countries, "name", "id");
+  const formattedUser = formatDataForSelect(user, "username", "id");
 
 
 
 
   const [selectedCategory, setSelectedCategory] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState([]);
+  const [selectedCity, setSelectedCity] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState([]);
+  const [selectedUser, setSelectedUser] = useState([]);
 
 
   const [selectedTag, setSelectedTag] = useState([]);
   const handleCategoryChange = (selectedOptions) => {
     setSelectedCategory(selectedOptions);
   };
+  const handleUserChange = (selectedOptions) => {
+    setSelectedUser(selectedOptions);
+  };
 
   const handleTagChange = (selectedOptions) => {
     setSelectedTag(selectedOptions);
   };
+  const handleRegionChange = (selectedOptions) => {
+    setSelectedRegion(selectedOptions);
+  };
+  const handleCityChange = (selectedOptions) => {
+    setSelectedCity(selectedOptions);
+  };
+  const handleCountryChange = (selectedOptions) => {
+    setSelectedCountry(selectedOptions);
+  };
+  console.log(selectedRegion)
+
 
   const [sm, updateSm] = useState(false);
   const [startDate, setStartDate] = useState();
@@ -353,18 +413,18 @@ const UserListRegularPage = () => {
     company: "",
     department: "",
     job_title: "",
-    birthday: "",
     categories: [],
     tags: [],
-    country: [],
-    city: [],
-    district: [],
+    country: null,
+    city: null,
+    district: null,
     address_line: "",
     phone: "",
     email: "",
     website: "",
     is_active: null,
-    customer_representatives: []
+    customer_representatives: [],
+    user: ""
   });
   const [editId, setEditedId] = useState();
   const [view, setView] = useState({
@@ -401,6 +461,9 @@ const UserListRegularPage = () => {
   };
 
   const resetForm = () => {
+    setSelectedRegion([])
+    setSelectedCity([])
+    setSelectedCountry([])
     setSelectedCategory([])
     setSelectedTag([])
     setStartDate()
@@ -410,12 +473,11 @@ const UserListRegularPage = () => {
       company: "",
       department: "",
       job_title: "",
-      birthday: "",
       categories: [],
       tags: [],
-      country: [],
-      city: [],
-      district: [],
+      country: null,
+      city: null,
+      district: null,
       address_line: "",
       phone: "",
       email: "",
@@ -431,30 +493,27 @@ const UserListRegularPage = () => {
   const onFormSubmit = async (form) => {
     let accessToken = localStorage.getItem('accessToken');
 
-    const { first_name, last_name, job_title, email, phone, address_line, birthday } = form;
+    const { first_name, last_name, job_title, email, phone, address_line } = form;
 
     let submittedData = {
       first_name: first_name,
       last_name: last_name,
-      //  company: "",
-      //  department: "",
       job_title: job_title,
-      // birthday: formatDate(birthday),
       categories: selectedCategory.map((category) => category.value),
       tags: selectedTag.map((tag) => tag.value),
-      country: formData.country,
-      city: formData.city,
-      district: formData.district,
+      country: selectedCountry.value,
+      city: selectedRegion.value,
+      district: selectedCity.value,
       address_line: address_line,
       phone: phone,
       email: email,
       website: "",
       is_active: true,
-      //customer_representatives: [],
-      added_by: [1]
+      added_by: [1],
+      user: formData.user
     };
 
-    console.log(submittedData)
+    console.log(submittedData);
 
     try {
       const response = await axios.post(BASE_URL + "persons/", submittedData, {
@@ -464,6 +523,7 @@ const UserListRegularPage = () => {
         }
       });
       setData([response.data, ...data]);
+      setOriginalData([response.data, ...data]);
       setView({ open: false });
 
       toast.success("Kişi Başarıyla Eklendi", {
@@ -478,27 +538,55 @@ const UserListRegularPage = () => {
 
       resetForm();
     } catch (error) {
-      if (error.response) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.post(BASE_URL + "persons/", submittedData, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setData([response.data, ...data]);
+            setOriginalData([response.data, ...data]);
+            setView({ open: false });
+
+            toast.success("Kişi Başarıyla Eklendi", {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: false,
+            });
+
+            resetForm();
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
         console.error("Response Error:", error.response.data);
         console.error("Response Status:", error.response.status);
         console.error("Response Headers:", error.response.headers);
-      } else if (error.request) {
-        console.error("Request Error:", error.request);
-      } else {
-        console.error("Error Message:", error.message);
+        toast.error("Kişi Eklenirken Bir sorun Oluştu.", {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: false,
+        });
       }
-      console.error("Error Config:", error.config);
-      toast.error("Kişi Başarıyla Eklendi", {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: false,
-      });
     }
   };
+
+
 
 
 
@@ -514,28 +602,25 @@ const UserListRegularPage = () => {
         submittedData = {
           first_name: formData.first_name,
           last_name: formData.last_name,
-          // company: formData.company,
-          // department: formData.department,
-          // job_title: formData.job_title,
-          // birthday: new Date(formData.birthday),
+          company: formData.company,
+          department: formData.department,
+          job_title: formData.job_title,
           categories: formData.categories.map(category => category.value || category), // ID'leri alıyoruz
           tags: formData.tags.map(tag => tag.value || tag), // ID'leri alıyoruz
-          // country: formData.country,
-          // city: formData.city,
-          // district: formData.district,
-          // address_line: formData.address_line,
-          // phone: formData.phone,
+          country: formData.country,
+          city: formData.city,
+          district: formData.district,
+          address_line: formData.address_line,
+          phone: formData.phone,
           email: formData.email,
-          // website: formData.website,
+          website: formData.website,
           is_active: formData.is_active,
-          // customer_representatives: formData.customer_representatives,
-          added_by: [1]
+          customer_representatives: formData.customer_representatives,
+          added_by: [1],
+          user: formData.user
         };
       }
     });
-
-
-    console.log(submittedData)
 
     try {
       const response = await axios.put(`${BASE_URL}persons/${editId}`, submittedData, {
@@ -545,43 +630,45 @@ const UserListRegularPage = () => {
         }
       });
 
-      setAlertMessage("Kişi başarıyla güncellendi!");
-      setAlertColor("success");
-      setAlertVisible(true);
-
-      // 3 saniye sonra uyarıyı gizle
-      setTimeout(() => {
-        setAlertVisible(false);
-      }, 3000);
+      toast.success("Kişi Başarıyla Güncellendi", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: false,
+      });
       newItems[index] = response.data;
       setData(newItems);
+      setOriginalData(newItems);
       resetForm();
       setView({ edit: false, add: false });
     } catch (error) {
       console.error('Veritabanını güncelleme sırasında hata oluştu:', error);
-      setAlertMessage("Kişi eklenirken bir hata oluştu!");
-      setAlertColor("danger");
-      setAlertVisible(true);
-
-      // 3 saniye sonra uyarıyı gizle
-      setTimeout(() => {
-        setAlertVisible(false);
-      }, 3000);
+      toast.error("Kişi Güncellenirken Bir Hata Oluştu.", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: false,
+      });
     }
   };
+
 
 
   const onEditClick = (id) => {
     data.forEach((item) => {
       if (item.id === id) {
-
         setFormData({
           first_name: item.first_name,
           last_name: item.last_name,
           company: item.company,
           department: item.department,
           job_title: item.job_title,
-          birthday: new Date(item.birthday),
           categories: item.categories,
           tags: item.tags,
           country: item.country,
@@ -593,15 +680,19 @@ const UserListRegularPage = () => {
           website: item.website,
           is_active: item.is_active,
           customer_representatives: item.customer_representatives,
-
+          user: item.user
         });
-      }
 
+        // Yeni eklenen kodlar
+        setSelectedRegion(formattedRegions.find(region => region.value === item.city));
+        setSelectedCity(formattedCities.find(city => city.value === item.district));
+        setSelectedCountry(formattedCountries.find(country => country.value === item.country));
+      }
     });
     setEditedId(id);
-
     setView({ add: false, edit: true });
   };
+
 
   useEffect(() => {
     reset(formData)
@@ -646,6 +737,7 @@ const UserListRegularPage = () => {
       });
       let updatedData = data.filter((item) => item.id !== id);
       setData([...updatedData]);
+      setOriginalData([...updatedData]);
       toast.warning("Kişi Başarıyla Silindi", {
         position: "top-right",
         autoClose: 2000,
@@ -920,6 +1012,7 @@ const UserListRegularPage = () => {
                                   <small className="text-soft">{item.email}</small>
                                 </span>
                               </Link>
+
                             </DataTableRow>
 
                             <DataTableRow size="md">
@@ -945,12 +1038,18 @@ const UserListRegularPage = () => {
                                 ) : null;
                               })}
                             </DataTableRow>
-                            <DataTableRow size="md">
-                              <span className="tb-sub">{item.city}</span>
+                            <DataTableRow>
+                              {(() => {
+                                const region = regions.find(reg => reg.id === item.city);
+                                return (
+                                  <span className="tb-sub"> {region ? region.name : ''}</span>
+
+                                );
+                              })()}
                             </DataTableRow>
                             <DataTableRow size="md">
-                              <img style={{ borderRadius: "50%", width: "25px" }} src={ProductH} alt="product" className="thumb" />
-                              <span style={{ paddingLeft: "5px" }} className="tb-sub"></span>
+
+                              <span style={{ paddingLeft: "5px" }} className="tb-sub">{item.user}</span>
                             </DataTableRow>
                             <DataTableRow>
                               <span className={`tb-status text-${item.is_active ? "success" : "danger"}`}>
@@ -1146,23 +1245,7 @@ const UserListRegularPage = () => {
                         </div>
                       </div>
                     </Col>
-                    <Col lg="4">
-                      <div className="form-group">
-                        <label className="form-label" htmlFor="dogumGunu">
-                          Doğum Günü
-                        </label>
-                        <div className="form-control-wrap">
-                          <DatePicker
-                            id="dogumGunu"
-                            selected={formData.birthday}
-                            onChange={(e) => setFormData({ ...formData, birthday: e })}
-                            className="form-control"
-                            placeholderText="Doğum Tarihi"
 
-                          />
-                        </div>
-                      </div>
-                    </Col>
 
                     <Col lg="4">
                       <div className="form-group">
@@ -1206,14 +1289,14 @@ const UserListRegularPage = () => {
                           Ülke
                         </label>
                         <div className="form-control-wrap">
-                          <input
-                            id="ulke"
-                            type="text"
-                            className="form-control"
-
-                            value={formData.country}
-                            onChange={(e) => setFormData({ ...formData, country: e.target.value })} />
-
+                          <RSelect
+                            options={formattedCountries}
+                            value={formattedCountries.find(option => option.value === formData.country)}
+                            onChange={(selectedOption) => {
+                              setFormData({ ...formData, country: selectedOption.value });
+                              setSelectedCountry(selectedOption);
+                            }}
+                          />
                         </div>
                       </div>
                     </Col>
@@ -1223,8 +1306,14 @@ const UserListRegularPage = () => {
                           Şehir
                         </label>
                         <div className="form-control-wrap">
-
-
+                          <RSelect
+                            options={formattedRegions}
+                            value={formattedRegions.find(option => option.value === formData.city)}
+                            onChange={(selectedOption) => {
+                              setFormData({ ...formData, city: selectedOption.value });
+                              setSelectedRegion(selectedOption);
+                            }}
+                          />
                         </div>
                       </div>
                     </Col>
@@ -1234,17 +1323,18 @@ const UserListRegularPage = () => {
                           İlçe
                         </label>
                         <div className="form-control-wrap">
-                          <input
-                            id="ilce"
-                            type="text"
-                            className="form-control"
-
-                            value={formData.district}
-                            onChange={(e) => setFormData({ ...formData, district: e.target.value })} />
-
+                          <RSelect
+                            options={formattedCities}
+                            value={formattedCities.find(option => option.value === formData.district)}
+                            onChange={(selectedOption) => {
+                              setFormData({ ...formData, district: selectedOption.value });
+                              setSelectedCity(selectedOption);
+                            }}
+                          />
                         </div>
                       </div>
                     </Col>
+
                     <Col lg="4">
                       <div className="form-group">
                         <label className="form-label" htmlFor="adress">
@@ -1336,6 +1426,12 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            options={formattedUser}
+                            value={formattedUser.find(option => option.value === formData.user)}
+                            onChange={(selectedOption) => {
+                              setFormData({ ...formData, user: selectedOption.value });
+                              setSelectedCity(selectedOption);
+                            }}
                           />
                         </div>
                       </div>
@@ -1392,10 +1488,7 @@ const UserListRegularPage = () => {
                   <span className="sub-text">Ünvan</span>
                   <span className="caption-text">{formData.job_title}</span>
                 </Col>
-                <Col lg={4}>
-                  <span className="sub-text">Doğum Günü</span>
-                  <span className="caption-text">{new Date(formData.birthday).toLocaleDateString('tr-TR')}</span>
-                </Col>
+
                 <Col lg={4}>
                   <span className="sub-text">Kategori</span>
                   <span className="caption-text">
@@ -1585,30 +1678,9 @@ const UserListRegularPage = () => {
                         id="telefon"
 
                         placeholder="Telefon No"
-
+                        value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
 
-                    </div>
-                  </div>
-                </Col>
-                <Col size="6">
-                  <div className="form-group">
-                    <label htmlFor="dogumTarihi" className="form-label text-soft">
-
-                      Doğum Tarihi
-
-                    </label>
-
-                    <div className="form-control-wrap">
-                      <DatePicker
-                        id="dogumTarihi"
-                        onChange={(date) => setFormData({ ...formData, birthday: formatDate(date) })}
-                        selected={formData.birthday ? new Date(formData.birthday) : null}
-                        className="form-control"
-                        placeholderText="Doğum Tarihi"
-                        dateFormat="dd/MM/yyyy" // Tarih seçiminde görünen format
-
-                      />
                     </div>
                   </div>
                 </Col>
@@ -1627,7 +1699,7 @@ const UserListRegularPage = () => {
                         id="website"
 
                         placeholder="Website"
-
+                        value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
 
                     </div>
@@ -1650,7 +1722,7 @@ const UserListRegularPage = () => {
                     <div className="form-control-wrap">
                       <RSelect
                         name="tag"
-                        isMulti
+
                         placeholder="Departman"
                       />
                     </div>
@@ -1665,13 +1737,14 @@ const UserListRegularPage = () => {
                     </label>
 
                     <div className="form-control-wrap">
-
                       <RSelect
-                        name="representative"
+                        name="category"
                         isMulti
-                        placeholder="Temsilci"
+                        placeholder="Kategori"
+                        options={formattedUser}
+                        onChange={(selectedOptions) => handleUserChange(selectedOptions)}
+                        value={selectedUser}
                       />
-
                     </div>
                   </div>
                 </Col>
@@ -1691,9 +1764,7 @@ const UserListRegularPage = () => {
                         options={formattedCategories}
                         onChange={(selectedOptions) => handleCategoryChange(selectedOptions)}
                         value={selectedCategory}
-
                       />
-
                     </div>
                   </div>
                 </Col>
@@ -1757,9 +1828,8 @@ const UserListRegularPage = () => {
 
                         placeholder="Şehir"
                         options={formattedRegions}
-                        onChange={(value) => setFormData({ ...formData, city: value })}
-
-
+                        onChange={(selectedOptions) => handleRegionChange(selectedOptions)}
+                        value={selectedRegion}
                       />
 
                     </div>
@@ -1776,12 +1846,10 @@ const UserListRegularPage = () => {
                     <div className="form-control-wrap">
                       <RSelect
                         name="ilce"
-
                         placeholder="İlçe"
                         options={formattedCities}
-                        onChange={(value) => setFormData({ ...formData, disrict: value })}
-
-
+                        onChange={(selectedOptions) => handleCityChange(selectedOptions)}
+                        value={selectedCity}
                       />
 
                     </div>
@@ -1798,12 +1866,10 @@ const UserListRegularPage = () => {
                     <div className="form-control-wrap">
                       <RSelect
                         name="ulke"
-
                         placeholder="Ülke"
                         options={formattedCountries}
-                        onChange={(value) => setFormData({ ...formData, country: value })}
-
-
+                        onChange={(selectedOptions) => handleCountryChange(selectedOptions)}
+                        value={selectedCountry}
                       />
 
                     </div>

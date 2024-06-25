@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import menu from "./MenuData";
-import Icon from "../../components/icon/Icon";
-import classNames from "classnames";
 import { NavLink, Link } from "react-router-dom";
+import classNames from "classnames";
+import Icon from "../../components/icon/Icon";
 
 const MenuHeading = ({ heading }) => {
   return (
@@ -14,6 +14,7 @@ const MenuHeading = ({ heading }) => {
 
 const MenuItem = ({ icon, link, text, sub, newTab, sidebarToggle, mobileView, badge, ...props }) => {
   let currentUrl;
+
   const toggleActionSidebar = (e) => {
     if (!sub && !newTab && mobileView) {
       sidebarToggle(e);

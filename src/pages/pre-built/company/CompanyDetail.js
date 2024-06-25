@@ -63,7 +63,7 @@ const CompanyDetailPage = () => {
             return null;
         }
     };
-    const getAllCompanies = async () => {
+    const getCompany = async () => {
         let accessToken = localStorage.getItem('accessToken');
 
 
@@ -99,7 +99,7 @@ const CompanyDetailPage = () => {
             }
         }
     };
-    const getAllUserContactHistory = async () => {
+    const getCompanyContactHistory = async () => {
         let accessToken = localStorage.getItem('accessToken');
 
 
@@ -138,8 +138,8 @@ const CompanyDetailPage = () => {
         }
     };
     useEffect(() => {
-        getAllCompanies()
-        getAllUserContactHistory()
+        getCompany()
+        getCompanyContactHistory()
 
     }, [companyId])
 
@@ -216,7 +216,8 @@ const CompanyDetailPage = () => {
 
             // Veritabanı güncelleme başarılı olursa yerel veriyi güncelle
             newItems[index] = response.data;
-            setData(newItems);
+            setConversation(newItems);
+            setOriginalContactHistory(newItems);
             resetForm();
             setView({ edit: false, add: false });
         } catch (error) {
@@ -281,7 +282,8 @@ const CompanyDetailPage = () => {
                 }
             });
             let updatedData = conversation.filter((item) => item.id !== id);
-            setData([...updatedData]);
+            setConversation(...updatedData);
+            setOriginalContactHistory(...updatedData);
         } catch (error) {
             console.error("There was an error deleting the product!", error);
         }

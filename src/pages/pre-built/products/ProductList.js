@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Head from "../../../layout/head/Head";
 import Content from "../../../layout/content/Content";
-import ProductH from "../../../images/avatar/a-sm.jpg"
+
 import SimpleBar from "simplebar-react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { RSelect } from "../../../components/Component";
-import DatePicker from "react-datepicker";
-import api from '../../../api/api';
-import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, ButtonGroup, Modal, ModalBody, Badge, Label, Input } from "reactstrap";
+
+import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, Input } from "reactstrap";
+import { NumericFormat } from 'react-number-format';
 
 import {
   Block,
@@ -35,40 +35,9 @@ import axios from "axios";
 
 const BASE_URL = "https://tiosone.com/products/api/"
 
-const UserListRegularPage = () => {
+const ProductList = () => {
 
-  let accessToken = localStorage.getItem('accessToken');
 
-  const getAllCategories = async () => {
-    try {
-      const response = await axios.get(BASE_URL + "categories", {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
-        }
-      });;
-      setCategories(response.data);
-    } catch (error) {
-      console.error("There was an error fetching the data!", error);
-    }
-  };
-  const getAllTags = async () => {
-    try {
-      const response = await axios.get(BASE_URL + "tags", {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
-        }
-      });;
-      setTags(response.data);
-    } catch (error) {
-      console.error("There was an error fetching the data!", error);
-    }
-  };
-
-  const [data, setData] = useState([]);
-  const [originalData, setOriginalData] = useState([]);
-  console.log(data)
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
 
@@ -100,10 +69,83 @@ const UserListRegularPage = () => {
     }
   };
 
-  const getAllProducts = async () => {
+  const getAllCategories = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+    try {
+      const response = await axios.get(BASE_URL + "categories?type=company", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setCategories(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get(BASE_URL + "categories?type=company", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setCategories(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
+
+
+  const getAllTags = async () => {
     let accessToken = localStorage.getItem('accessToken');
 
+    try {
+      const response = await axios.get(BASE_URL + "tags?type=company", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setTags(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get(BASE_URL + "tags?type=company", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setTags(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
 
+  const [data, setData] = useState([]);
+  const [originalData, setOriginalData] = useState([]);
+  console.log(data)
+
+
+  const getAllProducts = async () => {
+    let accessToken = localStorage.getItem('accessToken');
     try {
       const response = await axios.get(BASE_URL + "products/", {
         headers: {
@@ -115,10 +157,8 @@ const UserListRegularPage = () => {
       setOriginalData(response.data);
     } catch (error) {
       if (error.response && error.response.status === 401) {
-
         accessToken = await refreshAccessToken();
         if (accessToken) {
-
           try {
             const response = await axios.get(BASE_URL + "products/", {
               headers: {
@@ -137,10 +177,21 @@ const UserListRegularPage = () => {
       }
     }
   };
-  useEffect(() => {
-    getAllProducts()
 
-  }, [])
+  // Diğer benzer fonksiyonlar için de gereksiz console.log kullanımlarını kaldırın.
+
+  const getAllData = async () => {
+    await getAllProducts();
+    await getAllCategories();
+    await getAllTags();
+  }; // Bu sadece bileşen ilk yüklendiğinde çalışacak
+  useEffect(() => {
+    getAllData();
+
+  }, []); // Bu sadece bileşen ilk yüklendiğinde çalışacak
+
+
+
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
@@ -237,14 +288,14 @@ const UserListRegularPage = () => {
 
   useEffect(() => {
     if (onSearchText !== "") {
-      const filteredObject = data.filter((item) => {
+      const filteredObject = originalData.filter((item) => {
         return item.name.toLowerCase().includes(onSearchText.toLowerCase());
       });
       setData([...filteredObject]);
     } else {
       setData([...originalData]);
     }
-  }, [onSearchText]);
+  }, [onSearchText, originalData]);
 
   // function to close the form modal
   const onFormCancel = () => {
@@ -393,7 +444,7 @@ const UserListRegularPage = () => {
   };
 
   useEffect(() => {
-    reset(formData)
+    reset(formData);
   }, [formData]);
 
   // selects all the products
@@ -689,7 +740,7 @@ const UserListRegularPage = () => {
                             <DataTableRow>
 
                               <span className="badge bg-outline-secondary me-1">
-                                {item.product_type}
+                                {item.product_type === "service" ? "Servis" : "Ürün"}
                               </span>
 
                             </DataTableRow>
@@ -727,10 +778,23 @@ const UserListRegularPage = () => {
                               ))}
                             </DataTableRow>
                             <DataTableRow size="md">
-                              <span className="tb-sub">{item.purchase_price}</span>
+                              <NumericFormat
+                                value={item.purchase_price}
+                                displayType={'text'}
+                                thousandSeparator="."
+                                decimalSeparator=","
+                                renderText={(value) => <span className="tb-sub">{value}</span>}
+                              />
                             </DataTableRow>
+
                             <DataTableRow size="md">
-                              <span className="tb-sub">{item.sale_price}</span>
+                              <NumericFormat
+                                value={item.sale_price}
+                                displayType={'text'}
+                                thousandSeparator="."
+                                decimalSeparator=","
+                                renderText={(value) => <span className="tb-sub">{value}</span>}
+                              />
                             </DataTableRow>
                             <DataTableRow size="md">
                               <span className="tb-sub">Oluşturma Tarihi</span>
@@ -895,29 +959,42 @@ const UserListRegularPage = () => {
                           Alış Fiyatı
                         </label>
                         <div className="form-control-wrap">
-                          <input
-                            type="text"
+                          <NumericFormat
                             className="form-control"
-
+                            id="alis"
+                            thousandSeparator="."
+                            decimalSeparator=","
                             value={formData.purchase_price}
-                            onChange={(e) => setFormData({ ...formData, purchase_price: e.target.value })} />
-
+                            onValueChange={(values) => {
+                              const { formattedValue, value } = values;
+                              setFormData({ ...formData, purchase_price: value });
+                            }}
+                            placeholder="Alış Fiyatı (KDV Dahil)"
+                          />
+                          {errors.purchase_price && <span className="invalid">{errors.purchase_price.message}</span>}
                         </div>
                       </div>
                     </Col>
+
                     <Col lg="4">
                       <div className="form-group">
                         <label className="form-label" htmlFor="regular-price">
                           Satış Fiyatı
                         </label>
                         <div className="form-control-wrap">
-                          <input
-                            type="text"
+                          <NumericFormat
                             className="form-control"
-
+                            id="satis"
+                            thousandSeparator="."
+                            decimalSeparator=","
                             value={formData.sale_price}
-                            onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })} />
-
+                            onValueChange={(values) => {
+                              const { formattedValue, value } = values;
+                              setFormData({ ...formData, sale_price: value });
+                            }}
+                            placeholder="Satış Fiyatı (KDV Dahil)"
+                          />
+                          {errors.sale_price && <span className="invalid">{errors.sale_price.message}</span>}
                         </div>
                       </div>
                     </Col>
@@ -1159,43 +1236,44 @@ const UserListRegularPage = () => {
                 <Col size="6">
                   <div className="form-group">
                     <label htmlFor="alis" className="form-label text-soft">
-
                       Alış Fiyatı (KDV Dahil)
-
                     </label>
                     <div className="form-control-wrap">
-                      <input
-                        type="text"
+                      <NumericFormat
                         className="form-control"
                         id="alis"
-                        {...register('purchase_price', {
-                          required: "Lütfen boş bıraklın alanları doldurunuz.",
-                        })}
-                        placeholder="Alış Fiyatı (KDV Dahil)"
+                        thousandSeparator="."
+                        decimalSeparator=","
                         value={formData.purchase_price}
-                        onChange={(e) => setFormData({ ...formData, purchase_price: e.target.value })} />
+                        onValueChange={(values) => {
+                          const { formattedValue, value } = values;
+                          setFormData({ ...formData, purchase_price: value });
+                        }}
+                        placeholder="Alış Fiyatı (KDV Dahil)"
+                      />
                       {errors.purchase_price && <span className="invalid">{errors.purchase_price.message}</span>}
                     </div>
                   </div>
                 </Col>
+
                 <Col size="6">
                   <div className="form-group">
                     <label htmlFor="satis" className="form-label text-soft">
-
                       Satış Fiyatı (KDV Dahil)
-
                     </label>
                     <div className="form-control-wrap">
-                      <input
-                        type="text"
+                      <NumericFormat
                         className="form-control"
                         id="satis"
-                        {...register('sale_price', {
-                          required: "Lütfen boş bıraklın alanları doldurunuz.",
-                        })}
-                        placeholder="Satış Fiyatı (KDV Dahil)"
+                        thousandSeparator="."
+                        decimalSeparator=","
                         value={formData.sale_price}
-                        onChange={(e) => setFormData({ ...formData, sale_price: e.target.value })} />
+                        onValueChange={(values) => {
+                          const { formattedValue, value } = values;
+                          setFormData({ ...formData, sale_price: value });
+                        }}
+                        placeholder="Satış Fiyatı (KDV Dahil)"
+                      />
                       {errors.sale_price && <span className="invalid">{errors.sale_price.message}</span>}
                     </div>
                   </div>
@@ -1240,4 +1318,4 @@ const UserListRegularPage = () => {
     </>
   );
 };
-export default UserListRegularPage;
+export default ProductList;

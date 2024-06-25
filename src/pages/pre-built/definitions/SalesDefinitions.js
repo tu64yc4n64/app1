@@ -573,7 +573,11 @@ const OffersDefinitions = () => {
                                                         return (
                                                             <DataTableItem key={item.id}>
                                                                 <DataTableRow size="md">
-                                                                    <span className="tb-sub">{item.name}</span>
+                                                                    <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
+
+                                                                        <span className="title">{item.name} </span>
+
+                                                                    </span>
                                                                 </DataTableRow>
                                                                 <DataTableRow>
                                                                     {item.parent && (
@@ -657,7 +661,11 @@ const OffersDefinitions = () => {
                                                         return (
                                                             <DataTableItem key={item.id}>
                                                                 <DataTableRow size="md">
-                                                                    <span className="tb-sub">{item.name}</span>
+                                                                    <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
+
+                                                                        <span className="title">{item.name} </span>
+
+                                                                    </span>
                                                                 </DataTableRow>
                                                                 <DataTableRow size="md">
                                                                     <span className="tb-sub"></span>

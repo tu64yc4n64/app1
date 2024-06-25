@@ -8,7 +8,6 @@ import Toggle from "./Toggle";
 import { useTheme, useThemeUpdate } from '../provider/Theme';
 
 const Sidebar = ({ fixed, className, ...props }) => {
-
   const theme = useTheme();
   const themeUpdate = useThemeUpdate();
 
@@ -36,9 +35,8 @@ const Sidebar = ({ fixed, className, ...props }) => {
           <div className="nk-menu-trigger">
             <Toggle className="nk-nav-toggle nk-quick-nav-icon d-xl-none me-n2" icon="arrow-left" click={themeUpdate.sidebarVisibility} />
             <Toggle
-              className={`nk-nav-compact nk-quick-nav-icon d-none d-xl-inline-flex ${
-                theme.sidebarCompact ? "compact-active" : ""
-              }`}
+              className={`nk-nav-compact nk-quick-nav-icon d-none d-xl-inline-flex ${theme.sidebarCompact ? "compact-active" : ""
+                }`}
               click={themeUpdate.sidebarCompact}
               icon="menu"
             />
@@ -49,14 +47,15 @@ const Sidebar = ({ fixed, className, ...props }) => {
         </div>
         <div className="nk-sidebar-content" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
           <SimpleBar className="nk-sidebar-menu">
-            <Menu />
+            <Menu sidebarToggle={themeUpdate.sidebarVisibility} mobileView={theme.sidebarMobile} />
           </SimpleBar>
         </div>
       </div>
-      {theme.sidebarVisibility && <div 
-      onClick={themeUpdate.sidebarVisibility}
-       className="nk-sidebar-overlay"></div>}
+      {theme.sidebarVisibility && <div
+        onClick={themeUpdate.sidebarVisibility}
+        className="nk-sidebar-overlay"></div>}
     </>
   );
 };
+
 export default Sidebar;

@@ -37,7 +37,7 @@ import axios from "axios";
 const BASE_URL = "https://tiosone.com/customers/api/"
 
 
-const UserDetailsPage = () => {
+const PersonDetailsPage = () => {
   let { userId } = useParams();
 
   const refreshAccessToken = async () => {
@@ -72,7 +72,7 @@ const UserDetailsPage = () => {
   };
 
 
-  const getAllUsers = async () => {
+  const getPerson = async () => {
     let accessToken = localStorage.getItem('accessToken');
 
 
@@ -108,7 +108,7 @@ const UserDetailsPage = () => {
       }
     }
   };
-  const getAllUserContactHistory = async () => {
+  const getPersonContactHistory = async () => {
     let accessToken = localStorage.getItem('accessToken');
 
 
@@ -146,9 +146,37 @@ const UserDetailsPage = () => {
       }
     }
   };
+
+  const contact_type = [
+    {
+      value: "Email",
+      label: "email"
+    },
+    {
+      value: "Phone",
+      label: "phone"
+    },
+    {
+      value: "Meeting",
+      label: "meeting"
+    },
+    {
+      value: "Face To Face",
+      label: "face"
+    },
+    {
+      value: "Social Media",
+      label: "social_media"
+    },
+    {
+      value: "Other",
+      label: "other"
+    },
+
+  ]
   useEffect(() => {
-    getAllUsers()
-    getAllUserContactHistory()
+    getPerson()
+    getPersonContactHistory()
 
   }, [userId])
 
@@ -163,7 +191,7 @@ const UserDetailsPage = () => {
   const [sideBar, setSidebar] = useState(false);
   const [itemPerPage, setItemPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [user, setUser] = useState();
+  const [person, setPerson] = useState();
 
 
   const [modal, setModal] = useState({
@@ -173,8 +201,8 @@ const UserDetailsPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     date: "",
-    contact_type: "",
-    content: "",
+    type: "",
+    notice: 0,
 
   });
   const [editId, setEditedId] = useState();
@@ -207,7 +235,7 @@ const UserDetailsPage = () => {
       if (item.id === editId) {
         submittedData = {
           date: formData.date,
-          contact_type: formData.contact_type,
+          contact_type: formData.contact_type.label,
           content: formData.content,
         };
       }
@@ -225,7 +253,8 @@ const UserDetailsPage = () => {
 
       // Veritabanı güncelleme başarılı olursa yerel veriyi güncelle
       newItems[index] = response.data;
-      setData(newItems);
+      setConversation(newItems);
+      setOriginalContactHistory(newItems);
       resetForm();
       setView({ edit: false, add: false });
     } catch (error) {
@@ -260,9 +289,9 @@ const UserDetailsPage = () => {
     const id = userId;
     if (id !== undefined || null || "") {
       let spUser = data;
-      setUser(spUser);
+      setPerson(spUser);
     } else {
-      setUser(data[0]);
+      setPerson(data[0]);
     }
   }, [data]);
 
@@ -299,7 +328,8 @@ const UserDetailsPage = () => {
         }
       });
       let updatedData = conversation.filter((item) => item.id !== id);
-      setData([...updatedData]);
+      setConversation(...updatedData);
+      setOriginalContactHistory(...updatedData);
     } catch (error) {
       console.error("There was an error deleting the product!", error);
     }
@@ -326,16 +356,16 @@ const UserDetailsPage = () => {
   return (
     <>
       <Head title="User Details - Regular"></Head>
-      {user && (
+      {person && (
         <Content>
           <BlockHead size="sm">
             <BlockBetween>
               <BlockHeadContent>
                 <BlockTitle tag="h3" page>
-                  Kişiler / <strong className=" small">{user.first_name} {user.last_name}</strong>
+                  Kişiler / <strong className=" small">{person.first_name} {person.last_name}</strong>
 
                 </BlockTitle>
-                <span className="badge bg-outline-secondary">{user.category}</span>
+                <span className="badge bg-outline-secondary">{person.category}</span>
 
               </BlockHeadContent>
               <BlockHeadContent>
@@ -379,11 +409,11 @@ const UserDetailsPage = () => {
                           <ul className="user-detail-info-list">
                             <li>
                               <Icon name="call-alt-fill"></Icon>
-                              <strong className="ps-3">{user.phone}</strong>
+                              <strong className="ps-3">{person.phone}</strong>
                             </li>
                             <li>
                               <Icon name="mail-fill"></Icon>
-                              <strong className="ps-3">{user.email}</strong>
+                              <strong className="ps-3">{person.email}</strong>
                             </li>
                             <li>
                               <Icon name="user-fill"></Icon>
@@ -413,7 +443,7 @@ const UserDetailsPage = () => {
 
                         <div className="d-flex">
                           <Icon style={{ position: "relative", top: "4px" }} name="map-pin-fill"></Icon>
-                          <span>{user.address_line}</span>
+                          <span>{person.address_line}</span>
                         </div>
 
                       </CardBody>
@@ -765,7 +795,7 @@ const UserDetailsPage = () => {
                             />
                           ) : (
                             <div className="text-center">
-                              <span className="text-silent">Herhangi bir müşteri bulunamadı</span>
+                              <span className="text-silent">Herhangi bir görüşme bulunamadı.</span>
                             </div>
                           )}
                         </div>
@@ -823,14 +853,13 @@ const UserDetailsPage = () => {
                             Görüşme Türü
                           </label>
                           <div className="form-control-wrap">
-                            <input
-                              id="lastName"
-                              type="text"
-                              className="form-control"
 
+                            <RSelect
+                              options={contact_type}
                               value={formData.contact_type}
-                              onChange={(e) => setFormData({ ...formData, contact_type: e.target.value })} />
-
+                              placeholder={formData.contact_type}
+                              onChange={(value) => setFormData({ ...formData, contact_type: value })}
+                            />
                           </div>
                         </div>
                       </Col>
@@ -911,4 +940,4 @@ const UserDetailsPage = () => {
     </>
   );
 };
-export default UserDetailsPage;
+export default PersonDetailsPage;
