@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Content from "../../../layout/content/Content";
 import Head from "../../../layout/head/Head";
-import ProductH from "../../../images/avatar/a-sm.jpg"
 import { DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, CardBody, CardTitle } from "reactstrap";
 import DatePicker from "react-datepicker";
 import { useForm } from "react-hook-form";
-
 import AddMeetModal from "./AddMeetModal";
-
-
+import EditMeetModal from "./EditMeetModal"; // Yeni bileşeni ekle
+import ContactDetailsModal from './ContactDetailsModal';
 import {
   Block,
-
   BlockHead,
   BlockHeadContent,
   BlockTitle,
@@ -26,24 +23,17 @@ import {
   Row,
   PaginationComponent,
   RSelect
-
-
 } from "../../../components/Component";
-
 import { useNavigate, useParams } from "react-router-dom";
-
 import axios from "axios";
 
-const BASE_URL = "https://tiosone.com/customers/api/"
-
+const BASE_URL = "https://tiosone.com/customers/api/";
 
 const PersonDetailsPage = () => {
   let { userId } = useParams();
 
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
-
-
     if (!refreshToken) {
       console.error('No refresh token found in local storage.');
       return null;
@@ -71,10 +61,8 @@ const PersonDetailsPage = () => {
     }
   };
 
-
   const getPerson = async () => {
     let accessToken = localStorage.getItem('accessToken');
-
 
     try {
       const response = await axios.get(BASE_URL + `persons/${userId}`, {
@@ -86,10 +74,8 @@ const PersonDetailsPage = () => {
       setData(response.data);
     } catch (error) {
       if (error.response && error.response.status === 401) {
-
         accessToken = await refreshAccessToken();
         if (accessToken) {
-
           try {
             const response = await axios.get(BASE_URL + `persons/${userId}`, {
               headers: {
@@ -98,7 +84,6 @@ const PersonDetailsPage = () => {
               }
             });
             setData(response.data);
-
           } catch (retryError) {
             console.error("Retry error after refreshing token", retryError);
           }
@@ -108,9 +93,9 @@ const PersonDetailsPage = () => {
       }
     }
   };
+
   const getPersonContactHistory = async () => {
     let accessToken = localStorage.getItem('accessToken');
-
 
     try {
       const response = await axios.get(BASE_URL + `contact_histories?person=${userId}`, {
@@ -123,10 +108,8 @@ const PersonDetailsPage = () => {
       setOriginalContactHistory(response.data);
     } catch (error) {
       if (error.response && error.response.status === 401) {
-
         accessToken = await refreshAccessToken();
         if (accessToken) {
-
           try {
             const response = await axios.get(BASE_URL + `contact_histories?person=${userId}`, {
               headers: {
@@ -136,7 +119,6 @@ const PersonDetailsPage = () => {
             });
             setConversation(response.data);
             setOriginalContactHistory(response.data);
-
           } catch (retryError) {
             console.error("Retry error after refreshing token", retryError);
           }
@@ -147,52 +129,105 @@ const PersonDetailsPage = () => {
     }
   };
 
-  const contact_type = [
-    {
-      value: "Email",
-      label: "email"
-    },
-    {
-      value: "Phone",
-      label: "phone"
-    },
-    {
-      value: "Meeting",
-      label: "meeting"
-    },
-    {
-      value: "Face To Face",
-      label: "face"
-    },
-    {
-      value: "Social Media",
-      label: "social_media"
-    },
-    {
-      value: "Other",
-      label: "other"
-    },
+  const contactType = [
+    { value: "phone", label: "Telefon" },
+    { value: "email", label: "Email" },
+    { value: "face", label: "Yüz Yüze" },
+    { value: "social_media", label: "Sosyal Medya" },
+    { value: "other", label: "Diğer" },
+  ];
 
-  ]
   useEffect(() => {
-    getPerson()
-    getPersonContactHistory()
+    getPerson();
+    getPersonContactHistory();
+  }, [userId]);
 
-  }, [userId])
+  const getAllUsers = async () => {
+    let accessToken = localStorage.getItem('accessToken');
 
+    try {
+      const response = await axios.get("https://tiosone.com/users/api/users/", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setUser(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get("https://tiosone.com/users/api/users/", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setUser(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
+
+  const getAllTags = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    try {
+      const response = await axios.get(BASE_URL + "tags?type=person", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setTags(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get(BASE_URL + "tags?type=person", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setTags(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login';
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getAllUsers();
+    getAllTags();
+  }, []);
 
   const [data, setData] = useState([]);
-
+  const [user, setUser] = useState([]);
+  const [tags, setTags] = useState([]);
   const [originalContactHistory, setOriginalContactHistory] = useState([]);
   const [conversation, setConversation] = useState([]);
-  const currentItems = conversation
-  console.log(conversation)
+  const currentItems = conversation;
+  console.log(conversation);
 
   const [sideBar, setSidebar] = useState(false);
   const [itemPerPage, setItemPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [person, setPerson] = useState();
-
+  console.log(person);
 
   const [modal, setModal] = useState({
     edit: false,
@@ -203,7 +238,6 @@ const PersonDetailsPage = () => {
     date: "",
     type: "",
     notice: 0,
-
   });
   const [editId, setEditedId] = useState();
   const [view, setView] = useState({
@@ -219,72 +253,24 @@ const PersonDetailsPage = () => {
     });
   };
   const closeModal = () => {
-    setModal({ add: false })
+    setModal({ add: false, edit: false });
     resetForm();
   };
-
-
-  const onEditSubmit = async () => {
-    let accessToken = localStorage.getItem('accessToken');
-
-    let submittedData;
-    let newItems = conversation;
-    let index = newItems.findIndex((item) => item.id === editId);
-
-    newItems.forEach((item) => {
-      if (item.id === editId) {
-        submittedData = {
-          date: formData.date,
-          contact_type: formData.contact_type.label,
-          content: formData.content,
-        };
-      }
-    });
-
-    console.log(submittedData)
-
-    try {
-      const response = await axios.put(`${BASE_URL}contact_histories/${editId}`, submittedData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-
-      // Veritabanı güncelleme başarılı olursa yerel veriyi güncelle
-      newItems[index] = response.data;
-      setConversation(newItems);
-      setOriginalContactHistory(newItems);
-      resetForm();
-      setView({ edit: false, add: false });
-    } catch (error) {
-      console.error('Veritabanını güncelleme sırasında hata oluştu:', error);
-    }
-  };
-
 
   const onEditClick = (id) => {
     conversation.forEach((item) => {
       if (item.id === id) {
-
         setFormData({
           date: item.date,
           contact_type: item.contact_type,
           content: item.content,
-
         });
       }
-
     });
     setEditedId(id);
-
     setView({ add: false, edit: true });
   };
 
-
-
-
-  // grabs the id of the url and loads the corresponding data
   useEffect(() => {
     const id = userId;
     if (id !== undefined || null || "") {
@@ -295,17 +281,15 @@ const PersonDetailsPage = () => {
     }
   }, [data]);
 
-
-
   useEffect(() => {
     sideBar ? document.body.classList.add("toggle-shown") : document.body.classList.remove("toggle-shown");
-  }, [sideBar])
+  }, [sideBar]);
 
   const [onSearchText, setSearchText] = useState("");
   useEffect(() => {
     if (onSearchText !== "") {
       const filteredObject = conversation.filter((item) => {
-        return item.date.toLowerCase().includes(onSearchText.toLowerCase());
+        return item.content.toLowerCase().includes(onSearchText.toLowerCase());
       });
       setConversation([...filteredObject]);
     } else {
@@ -317,7 +301,7 @@ const PersonDetailsPage = () => {
     setSearchText(e.target.value);
   };
 
-  const deleteProduct = async (id) => {
+  const deleteContactHistory = async (id) => {
     let accessToken = localStorage.getItem('accessToken');
 
     try {
@@ -328,8 +312,8 @@ const PersonDetailsPage = () => {
         }
       });
       let updatedData = conversation.filter((item) => item.id !== id);
-      setConversation(...updatedData);
-      setOriginalContactHistory(...updatedData);
+      setConversation(updatedData);
+      setOriginalContactHistory(updatedData);
     } catch (error) {
       console.error("There was an error deleting the product!", error);
     }
@@ -348,7 +332,12 @@ const PersonDetailsPage = () => {
       add: type === "add" ? true : false,
       details: type === "details" ? true : false,
     });
-    setonSearch(!onSearch)
+    setonSearch(!onSearch);
+  };
+
+  const addContactHistory = (newContact) => {
+    setConversation(prevConversation => [newContact, ...prevConversation]);
+    setOriginalContactHistory(prevOriginalContactHistory => [newContact, ...prevOriginalContactHistory]);
   };
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
@@ -363,10 +352,8 @@ const PersonDetailsPage = () => {
               <BlockHeadContent>
                 <BlockTitle tag="h3" page>
                   Kişiler / <strong className=" small">{person.first_name} {person.last_name}</strong>
-
                 </BlockTitle>
                 <span className="badge bg-outline-secondary">{person.category}</span>
-
               </BlockHeadContent>
               <BlockHeadContent>
                 <Button
@@ -391,20 +378,14 @@ const PersonDetailsPage = () => {
               </BlockHeadContent>
             </BlockBetween>
           </BlockHead>
-
-
           <Block>
-
             <div>
-
               <div id="user-detail-block">
                 <div className="row">
-
                   <div className="col-md-4">
                     <div className="card-bordered card" >
                       <CardBody className="card-inner">
-                        <CardTitle tag="h6">Görüşme Bilgileri</CardTitle>
-
+                        <CardTitle tag="h6">Kişi Bilgileri</CardTitle>
                         <div>
                           <ul className="user-detail-info-list">
                             <li>
@@ -417,46 +398,50 @@ const PersonDetailsPage = () => {
                             </li>
                             <li>
                               <Icon name="user-fill"></Icon>
+                              {person.customer_representatives && person.customer_representatives.length > 0 && person.customer_representatives.map((representativeId, index) => {
+                                const representative = user.find(u => u.id === representativeId);
+                                return representative ? (
+                                  <strong key={index} className="ps-3">
+                                    {representative.username}
+                                  </strong>
+                                ) : null;
+                              })}
                             </li>
                             <li>
                               <Icon name="ticket-fill"></Icon>
-
+                              {person.tags && person.tags.length > 0 && person.tags.map((tagId, index) => {
+                                const tag = tags.find(per => per.id === tagId);
+                                return tag ? (
+                                  <strong key={index} className="ps-3">
+                                    {tag.name}
+                                  </strong>
+                                ) : null;
+                              })}
                             </li>
                             <li>
                               <Icon name="calender-date-fill"></Icon>
-                              <strong className="ps-3"> tarihinde oluşturuldu.</strong>
+                              <strong className="ps-3">{person.created_at} tarihinde oluşturuldu.</strong>
                             </li>
                             <li>
                               <Icon name="calender-date-fill"></Icon>
-                              <strong className="ps-3"> tarihinde düzenlendi.</strong>
+                              <strong className="ps-3">{person.updated_at} tarihinde düzenlendi.</strong>
                             </li>
                           </ul>
                         </div>
-
                       </CardBody>
-
-
                     </div>
                     <div className="card-bordered card" style={{ marginBottom: "28px" }} >
                       <CardBody className="card-inner">
                         <CardTitle tag="h6">Adres</CardTitle>
-
                         <div className="d-flex">
                           <Icon style={{ position: "relative", top: "4px" }} name="map-pin-fill"></Icon>
-                          <span>{person.address_line}</span>
+                          {person.address_line ? <span>{person.address_line}</span> : <span>Adres Bilgisi Girilmemiş</span>}
                         </div>
-
                       </CardBody>
-
-
                     </div>
                   </div>
-
                   {sideBar && <div className="toggle-overlay" onClick={() => toggle()}></div>}
-
-
                   <div className="col-md-8">
-
                     <div className="card-bordered card" >
                       <ul className="nav nav-tabs nav-tabs-mb-icon nav-tabs-card">
                         <li className="nav-item">
@@ -519,14 +504,10 @@ const PersonDetailsPage = () => {
                             <span>Hatırlatıcılar</span>
                           </a>
                         </li>
-
                       </ul>
-
                       <div className="card-inner">
                         <BlockHeadContent>
                           <div className="toggle-wrap nk-block-tools-toggle">
-
-
                             <div className="pb-4 d-md-flex" style={{ "justifyContent": "space-between" }}>
                               <ul className="nk-block-tools g-3">
                                 <li>
@@ -553,7 +534,6 @@ const PersonDetailsPage = () => {
                                     </DropdownToggle>
                                     <DropdownMenu>
                                       <ul className="link-list-opt no-bdr">
-
                                       </ul>
                                     </DropdownMenu>
                                   </UncontrolledDropdown>
@@ -568,12 +548,10 @@ const PersonDetailsPage = () => {
                                     </DropdownToggle>
                                     <DropdownMenu>
                                       <ul className="link-list-opt no-bdr">
-
                                       </ul>
                                     </DropdownMenu>
                                   </UncontrolledDropdown>
                                 </li>
-
                               </ul>
                               <div className="nk-block-tools-opt d-md-block d-flex justify-content-end">
                                 <Button
@@ -597,16 +575,13 @@ const PersonDetailsPage = () => {
                           </div>
                         </BlockHeadContent>
                         <DataTableBody>
-
                           <DataTableHead>
-
                             <DataTableRow className="nk-tb-col-check">
                               <div className="custom-control custom-control-sm custom-checkbox notext">
                                 <input
                                   type="checkbox"
                                   className="custom-control-input"
                                   id="uid_1"
-
                                 />
                                 <label className="custom-control-label" htmlFor="uid_1"></label>
                               </div>
@@ -623,8 +598,6 @@ const PersonDetailsPage = () => {
                             <DataTableRow size="md">
                               <span>Temsilci</span>
                             </DataTableRow>
-
-
                             <DataTableRow className="nk-tb-col-tools">
                               <ul className="nk-tb-actions gx-1 my-n1">
                                 <li className="me-n1">
@@ -649,7 +622,6 @@ const PersonDetailsPage = () => {
                                           <DropdownItem
                                             tag="a"
                                             href="#remove"
-
                                           >
                                             <Icon name="trash"></Icon>
                                             <span>Remove Selected</span>
@@ -676,7 +648,6 @@ const PersonDetailsPage = () => {
                           </DataTableHead>
                           {currentItems.length > 0
                             ? currentItems.map((item) => {
-
                               return (
                                 <DataTableItem key={item.id}>
                                   <DataTableRow className="nk-tb-col-check">
@@ -687,30 +658,26 @@ const PersonDetailsPage = () => {
                                         defaultChecked={item.check}
                                         id={item.id + "uid1"}
                                         key={Math.random()}
-
                                       />
                                       <label className="custom-control-label" htmlFor={item.id + "uid1"}></label>
                                     </div>
                                   </DataTableRow>
                                   <DataTableRow>
-
-                                    <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
-
-                                      <span className="title">{item.date}</span>
-
-                                    </span>
-
+                                    <span className="tb-sub">{item.date}</span>
                                   </DataTableRow>
-
                                   <DataTableRow size="md">
-                                    <span className="badge bg-outline-secondary">{item.contact_type}</span>
+                                    {item.contact_type && (
+                                      <span className="badge bg-outline-secondary me-1">
+                                        {contactType.find(cat => cat.value === item.contact_type)?.label}
+                                      </span>
+                                    )}
                                   </DataTableRow>
+
                                   <DataTableRow>
                                     <span className="tb-sub">{item.content}</span>
                                   </DataTableRow>
                                   <DataTableRow size="md">
-                                    <img style={{ borderRadius: "50%", width: "25px" }} src={ProductH} alt="product" className="thumb" />
-                                    <span style={{ paddingLeft: "5px" }} className="tb-sub"></span>
+                                    <span style={{ paddingLeft: "5px" }} className="tb-sub">{item.added_by}</span>
                                   </DataTableRow>
                                   <DataTableRow className="nk-tb-col-tools">
                                     <ul className="nk-tb-actions gx-1 my-n1">
@@ -735,7 +702,6 @@ const PersonDetailsPage = () => {
                                                     onEditClick(item.id);
                                                     toggle("edit");
                                                   }}
-
                                                 >
                                                   <Icon name="edit"></Icon>
                                                   <span>Görüşmeyi Düzenle</span>
@@ -750,7 +716,6 @@ const PersonDetailsPage = () => {
                                                     onEditClick(item.id);
                                                     toggle("details");
                                                   }}
-
                                                 >
                                                   <Icon name="eye"></Icon>
                                                   <span>Görüşmeyi Görüntüle</span>
@@ -762,9 +727,8 @@ const PersonDetailsPage = () => {
                                                   href="#remove"
                                                   onClick={(ev) => {
                                                     ev.preventDefault();
-                                                    deleteProduct(item.id);
+                                                    deleteContactHistory(item.id);
                                                   }}
-
                                                 >
                                                   <Icon name="trash"></Icon>
                                                   <span>Görüşmeyi Sil</span>
@@ -776,10 +740,6 @@ const PersonDetailsPage = () => {
                                       </li>
                                     </ul>
                                   </DataTableRow>
-
-
-
-
                                 </DataTableItem>
                               );
                             })
@@ -801,141 +761,33 @@ const PersonDetailsPage = () => {
                         </div>
                       </div>
                     </div>
-
                   </div>
-
-
-
-
                 </div>
               </div>
             </div>
-
-          </Block >
-
-          <Modal isOpen={view.edit} toggle={() => onFormCancel()} className="modal-dialog-centered" size="lg">
-            <ModalBody>
-              <a href="#cancel" className="close">
-                {" "}
-                <Icon
-                  name="cross-sm"
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    onFormCancel();
-                  }}
-                ></Icon>
-              </a>
-              <div className="p-2">
-                <h5 className="title">Görüşmeyi Düzenle</h5>
-                <div className="mt-4">
-                  <form noValidate onSubmit={handleSubmit(onEditSubmit)}>
-                    <Row className="g-3">
-                      <Col lg="4">
-                        <div className="form-group">
-                          <label className="form-label" htmlFor="firstName">
-                            Tarih
-                          </label>
-                          <div className="form-control-wrap">
-                            <input
-                              id="firstName"
-                              type="text"
-                              className="form-control"
-
-                              value={formData.date}
-                              onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
-
-                          </div>
-                        </div>
-                      </Col>
-                      <Col lg="4">
-                        <div className="form-group">
-                          <label className="form-label" htmlFor="lastName">
-                            Görüşme Türü
-                          </label>
-                          <div className="form-control-wrap">
-
-                            <RSelect
-                              options={contact_type}
-                              value={formData.contact_type}
-                              placeholder={formData.contact_type}
-                              onChange={(value) => setFormData({ ...formData, contact_type: value })}
-                            />
-                          </div>
-                        </div>
-                      </Col>
-                      <Col lg="4">
-                        <div className="form-group">
-                          <label className="form-label" htmlFor="sirket">
-                            Notlar
-                          </label>
-                          <div className="form-control-wrap">
-                            <input
-                              id="sirket"
-                              type="text"
-                              className="form-control"
-
-                              value={formData.content}
-                              onChange={(e) => setFormData({ ...formData, content: e.target.value })} />
-
-                          </div>
-                        </div>
-                      </Col>
-                      <Col size="12">
-                        <Button color="primary" type="submit">
-
-                          <span>Görüşmeyi Güncelle</span>
-                        </Button>
-                      </Col>
-                    </Row>
-                  </form>
-                </div>
-              </div>
-            </ModalBody>
-          </Modal>
-          <Modal isOpen={view.details} toggle={() => onFormCancel()} className="modal-dialog-centered" size="lg">
-            <ModalBody>
-              <a href="#cancel" className="close">
-                {" "}
-                <Icon
-                  name="cross-sm"
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    onFormCancel();
-                  }}
-                ></Icon>
-              </a>
-              <div className="nk-modal-head">
-                <h4 className="nk-modal-title title">
-                  Görüşme Bilgileri <small className="text-primary"></small>
-                </h4>
-
-              </div>
-              <div className="nk-tnx-details mt-sm-3">
-                <Row className="gy-3">
-                  <Col lg={4}>
-                    <span className="sub-text">Tarih</span>
-                    <span className="caption-text">{formData.date}</span>
-                  </Col>
-                  <Col lg={4}>
-                    <span className="sub-text">Görüşme Türü</span>
-                    <span className="caption-text">{formData.contact_type}</span>
-                  </Col>
-                  <Col lg={4}>
-                    <span className="sub-text">Notlar</span>
-                    <span className="caption-text">{formData.content}</span>
-                  </Col>
-
-
-
-                </Row>
-              </div>
-            </ModalBody>
-          </Modal>
-
-          {view.add && <div className="toggle-overlay" onClick={toggle}></div>}
-          <AddMeetModal modal={modal.add} closeModal={closeModal} />
-        </Content >
-
+          </Block>
+          <ContactDetailsModal
+            view={view}
+            onFormCancel={onFormCancel}
+            formData={formData}
+          />
+          <EditMeetModal
+            modal={view.edit}
+            closeModal={onFormCancel}
+            editId={editId}
+            formData={formData}
+            setFormData={setFormData}
+            conversation={conversation}
+            setConversation={setConversation}
+            setOriginalContactHistory={setOriginalContactHistory}
+          />
+          <AddMeetModal
+            modal={modal.add}
+            closeModal={() => setModal({ ...modal, add: false })}
+            onSubmit={addContactHistory}
+            userId={userId}
+          />
+        </Content>
       )}
     </>
   );

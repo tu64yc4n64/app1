@@ -18,6 +18,9 @@ import {
 
 
 } from "../../../components/Component";
+import { ToastContainer, toast } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import "./style.css"
@@ -29,7 +32,44 @@ const NewOffersPage = () => {
     const [categories, setCategories] = useState([]);
     const [tags, setTags] = useState([]);
     const [data, setData] = useState([]);
+    const [tax, setTax] = useState([]);
     console.log(data)
+
+
+    const getAllTax = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axios.get("https://tiosone.com/hub/api/taxrates/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setTax(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    try {
+                        const response = await axios.get("https://tiosone.com//hub/api/taxrates/", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        setTax(response.data);
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
+                } else {
+                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+                }
+            } else {
+                console.error("There was an error fetching the data!", error);
+            }
+        }
+    };
 
     const getAllCategories = async () => {
         let accessToken = localStorage.getItem('accessToken');
@@ -238,6 +278,7 @@ const NewOffersPage = () => {
     useEffect(() => {
         getAllOfferItems();
         getAllUSers();
+        getAllTax();
 
     }, [])
 
@@ -273,6 +314,7 @@ const NewOffersPage = () => {
         unit_price: item.unit_price,
 
     }));
+
     const [selectedOfferItem, setSelectedOfferItem] = useState([]);
     const handleOfferItemChange = (selectedOption) => {
         if (selectedOption) {
@@ -298,6 +340,8 @@ const NewOffersPage = () => {
     const [selectedTag, setSelectedTag] = useState([]);
     const formattedCategories = formatDataForSelect(categories, "name", "id");
     const formattedTags = formatDataForSelect(tags, "name", "id");
+    const formattedTaxes = formatDataForSelect(tax, "rate", "multiplier");
+    console.log(formattedTaxes)
 
     useEffect(() => {
         getAllCategories()
@@ -378,7 +422,6 @@ const NewOffersPage = () => {
             valid_until: formatDate(formData.valid_until), // formData'dan alınan tarihi formatla
         };
 
-        console.log(submittedData);
 
         try {
             const response = await axios.post(BASE_URL + "offers/", submittedData, {
@@ -450,6 +493,7 @@ const NewOffersPage = () => {
     const [offer, setOffer] = useState([])
     console.log(offer)
     const [selectedTax, setSelectedTax] = useState(null);
+    console.log(selectedTax)
     const [discount, setDiscount] = useState({
         label: "0%",
         value: "0"
@@ -481,17 +525,30 @@ const NewOffersPage = () => {
     const handleAddOffer = (event) => {
         event.preventDefault();
 
+        // Inputların boş olup olmadığını kontrol edin
+        if (!newOfferData.description || !newOfferData.product_name || !newOfferData.quantity || !newOfferData.unit_price || !selectedTax) {
+            toast.error("Ürün Eklenirken Bir Hata Oluştu.", {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: false,
+            });
+            return;
+        }
+
         const newOfferItem = {
             id: offer.length + 1, // Basit bir benzersiz id oluşturma
             description: newOfferData.description,
             product: newOfferData.product,
             product_name: newOfferData.product_name,
             quantity: newOfferData.quantity,
-            tax: selectedTax ? selectedTax.label.replace("%", "") : newOfferData.tax,
+            tax: selectedTax,
             total: newOfferData.total,
             unit_price: newOfferData.unit_price,
         };
-
         setOffer((prevOffer) => [...prevOffer, newOfferItem]);
 
         setSelectedTax(null);
@@ -509,13 +566,15 @@ const NewOffersPage = () => {
     };
 
 
+
+
     const [discountValue, setDiscountValue] = useState(0);
     const [discountType, setDiscountType] = useState("percentage");
 
     const calculateSubtotal = () => {
         let subtotal = 0;
         offer.forEach(item => {
-            const totalItemPrice = parseFloat(item.quantity) * parseFloat(item.unit_price) * ((parseFloat(item.tax) + 100) / 100);
+            const totalItemPrice = parseFloat(item.quantity) * parseFloat(item.unit_price) * (parseFloat(item.tax.value));
             subtotal += totalItemPrice;
         });
         return subtotal.toFixed(2);
@@ -541,16 +600,7 @@ const NewOffersPage = () => {
 
 
 
-    const taxData = [
-        {
-            label: "20%",
-            value: "1.2"
-        },
-        {
-            label: "15%",
-            value: "1.15"
-        }
-    ];
+
     const discountData = [
         {
             label: "0%",
@@ -574,6 +624,7 @@ const NewOffersPage = () => {
     const { register, handleSubmit, reset, formState: { errors } } = useForm();
     return (
         <Content>
+            <ToastContainer />
             <BlockHead size="sm">
                 <BlockBetween>
                     <BlockHeadContent>
@@ -716,7 +767,7 @@ const NewOffersPage = () => {
                                     <Col sm="12">
                                         <div className="form-group">
                                             <label htmlFor="kime" className="form-label text-soft">
-                                                Durum
+                                                Kime
                                             </label>
 
                                             <div className="form-control-wrap">
@@ -847,11 +898,11 @@ const NewOffersPage = () => {
                                                 <hr className="d-xl-block d-none"></hr>
                                                 <div className="form-group">
                                                     <div className="form-control-wrap">
-                                                        <textarea
+                                                        <input
                                                             name="product_name"
                                                             value={newOfferData.product_name}
                                                             onChange={handleInputChange}
-                                                            style={{ minHeight: "80px" }}
+
                                                             id="default-textarea"
                                                             className="no-resize form-control"
                                                             placeholder="Ürün Adı"
@@ -864,12 +915,12 @@ const NewOffersPage = () => {
                                                 <hr className="d-xl-block d-none"></hr>
                                                 <div className="form-group">
                                                     <div className="form-control-wrap">
-                                                        <textarea
+                                                        <input
                                                             name="description"
                                                             value={newOfferData.description}
                                                             onChange={handleInputChange}
-                                                            style={{ minHeight: "80px" }}
-                                                            id="default-textarea"
+                                                            type="text"
+                                                            id="description"
                                                             className="no-resize form-control"
                                                             placeholder="Açıklama"
                                                         />
@@ -885,7 +936,7 @@ const NewOffersPage = () => {
                                                             name="quantity"
                                                             value={newOfferData.quantity}
                                                             onChange={handleInputChange}
-                                                            id="default-0"
+                                                            id="quantity"
                                                             placeholder="Adet"
                                                             type="text"
                                                             className="form-control"
@@ -916,8 +967,8 @@ const NewOffersPage = () => {
                                                 <div className="form-group">
                                                     <div className="form-control-wrap">
                                                         <RSelect
-                                                            value={selectedTax}
-                                                            options={taxData}
+                                                            value={selectedTax} // Bu satır eklendi
+                                                            options={formattedTaxes}
                                                             onChange={(selectedOption) => handleTaxChange(selectedOption)}
                                                             placeholder="Vergi"
                                                         />
@@ -944,15 +995,17 @@ const NewOffersPage = () => {
                                         <Col md="12">
                                             <Row>
                                                 <Col xl="2" lg="6" className="pb-xl-0 pb-3">
-                                                    <strong className="text-dark">Ürün Adı</strong>
-                                                    <hr className="d-xl-block d-none"></hr>
+                                                    <div className="d-xl-none d-block">
+                                                        <strong className="text-dark">Ürün Adı</strong>
+                                                        <hr className="d-xl-block d-none"></hr>
+                                                    </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
-                                                            <textarea
+                                                            <input
                                                                 name="product_name"
                                                                 value={item.product_name}
                                                                 onChange={(e) => handleEditChange(e, item.id)}
-                                                                style={{ minHeight: "80px" }}
+
                                                                 id="default-textarea"
                                                                 className="no-resize form-control"
                                                                 placeholder="Ürün Adı"
@@ -961,15 +1014,17 @@ const NewOffersPage = () => {
                                                     </div>
                                                 </Col>
                                                 <Col xl="3" lg="6" className="pb-xl-0 pb-3">
-                                                    <strong className="text-dark">Açıklama</strong>
-                                                    <hr className="d-xl-block d-none"></hr>
+                                                    <div className="d-xl-none d-block">
+                                                        <strong className="text-dark">Açıklama</strong>
+                                                        <hr className="d-xl-block d-none"></hr>
+                                                    </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
-                                                            <textarea
+                                                            <input
                                                                 name="description"
                                                                 value={item.description}
                                                                 onChange={(e) => handleEditChange(e, item.id)}
-                                                                style={{ minHeight: "80px" }}
+
                                                                 id="default-textarea"
                                                                 className="no-resize form-control"
                                                                 placeholder="Açıklama"
@@ -978,8 +1033,10 @@ const NewOffersPage = () => {
                                                     </div>
                                                 </Col>
                                                 <Col xl="1" lg="6" className="pb-xl-0 pb-3">
-                                                    <strong className="text-dark">Adet</strong>
-                                                    <hr className="d-xl-block d-none"></hr>
+                                                    <div className="d-xl-none d-block">
+                                                        <strong className="text-dark">Adet</strong>
+                                                        <hr className="d-xl-block d-none"></hr>
+                                                    </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
                                                             <input
@@ -995,8 +1052,10 @@ const NewOffersPage = () => {
                                                     </div>
                                                 </Col>
                                                 <Col xl="2" lg="6" className="pb-xl-0 pb-3">
-                                                    <strong className="text-dark">Birim Fiyat (Vergi Dahil)</strong>
-                                                    <hr className="d-xl-block d-none"></hr>
+                                                    <div className="d-xl-none d-block">
+                                                        <strong className="text-dark">Birim Fiyat (Vergi Dahil)</strong>
+                                                        <hr className="d-xl-block d-none"></hr>
+                                                    </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
                                                             <input
@@ -1012,13 +1071,15 @@ const NewOffersPage = () => {
                                                     </div>
                                                 </Col>
                                                 <Col xl="2" lg="6" className="pb-xl-0 pb-3">
-                                                    <strong className="text-dark">Vergi</strong>
-                                                    <hr className="d-xl-block d-none"></hr>
+                                                    <div className="d-xl-none d-block">
+                                                        <strong className="text-dark">Vergi</strong>
+                                                        <hr className="d-xl-block d-none"></hr>
+                                                    </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
                                                             <input
                                                                 name="tax"
-                                                                value={item.tax}
+                                                                value={item.tax ? item.tax.label : ''} // item.tax null ise boş string kullan
                                                                 onChange={(e) => handleEditChange(e, item.id)}
                                                                 id="default-0"
                                                                 placeholder="Vergi"
@@ -1029,13 +1090,15 @@ const NewOffersPage = () => {
                                                     </div>
                                                 </Col>
                                                 <Col xl="1" lg="6" className="pb-xl-0 pb-3">
-                                                    <strong className="text-dark">Tutar</strong>
-                                                    <hr className="d-xl-block d-none"></hr>
+                                                    <div className="d-xl-none d-block">
+                                                        <strong className="text-dark">Tutar</strong>
+                                                        <hr className="d-xl-block d-none"></hr>
+                                                    </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
                                                             <input
                                                                 readOnly
-                                                                value={item.total}
+                                                                value={item.unit_price * item.tax.value * item.quantity}
                                                                 className="form-control"
                                                                 placeholder="Tutar"
                                                             />

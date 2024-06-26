@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import Head from "../../../layout/head/Head";
 import Content from "../../../layout/content/Content";
-import ProductH from "../../../images/avatar/a-sm.jpg"
+
 import SimpleBar from "simplebar-react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { RSelect } from "../../../components/Component";
-import DatePicker from "react-datepicker";
+
 import api from '../../../api/api';
-import Swal from "sweetalert2";
+import "./style.css"
+
 import { ToastContainer, toast } from 'react-toastify';
 
 import 'react-toastify/dist/ReactToastify.css';
@@ -42,12 +43,14 @@ const BASE_URL = "https://tiosone.com/customers/api/"
 const UserListRegularPage = () => {
 
   const [data, setData] = useState([]);
+  console.log(data)
+
   const [user, setUser] = useState([]);
+
   const [regions, setRegions] = useState([]);
   const [countries, setCountries] = useState([]);
   const [cities, setCities] = useState([]);
 
-  console.log(data)
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
 
@@ -78,7 +81,6 @@ const UserListRegularPage = () => {
       return null;
     }
   };
-
 
   const getAllRegions = async () => {
     let accessToken = localStorage.getItem('accessToken');
@@ -149,40 +151,7 @@ const UserListRegularPage = () => {
       }
     }
   };
-  const getAllCities = async () => {
-    let accessToken = localStorage.getItem('accessToken');
 
-    try {
-      const response = await axios.get("https://tiosone.com/hub/api/cities/", {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      setCities(response.data);
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        accessToken = await refreshAccessToken();
-        if (accessToken) {
-          try {
-            const response = await axios.get("https://tiosone.com/hub/api/cities/", {
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
-              }
-            });
-            setCities(response.data);
-          } catch (retryError) {
-            console.error("Retry error after refreshing token", retryError);
-          }
-        } else {
-          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
-        }
-      } else {
-        console.error("There was an error fetching the data!", error);
-      }
-    }
-  };
 
   const getAllCategories = async () => {
     let accessToken = localStorage.getItem('accessToken');
@@ -255,21 +224,53 @@ const UserListRegularPage = () => {
   };
 
 
-
-
-
   const getAllPersons = async () => {
     let accessToken = localStorage.getItem('accessToken');
 
     try {
-      const response = await axios.get(BASE_URL + "persons/", {
+      let url = "persons/";
+      let query = [];
+
+      if (selectedFiltreCategory && selectedFiltreCategory.length > 0) {
+        const categories = selectedFiltreCategory.map(item => item.label).join(',');
+        query.push(`categories=${categories}`);
+      }
+
+      if (selectedFiltreTag && selectedFiltreTag.length > 0) {
+        const tags = selectedFiltreTag.map(item => item.label).join(',');
+        query.push(`tags=${tags}`);
+      }
+
+      if (query.length > 0) {
+        url += '?' + query.join('&');
+      }
+
+      console.log("Constructed URL:", BASE_URL + url);
+      console.log("Selected Categories:", selectedFiltreCategory.map(item => item.label));
+      console.log("Selected Tags:", selectedFiltreTag.map(item => item.label));
+
+      const response = await axios.get(BASE_URL + url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         }
       });
+
+      if (response.data.length === 0) {
+        toast.warning("Herhangi bir müşteri bulunamadı", {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: false,
+        });
+      }
+
       setData(response.data);
       setOriginalData(response.data);
+
     } catch (error) {
       if (error.response && error.response.status === 401) {
         accessToken = await refreshAccessToken();
@@ -290,11 +291,22 @@ const UserListRegularPage = () => {
           window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
         }
       } else {
-        console.error("There was an error fetching the data!", error);
+        if (error.response) {
+          // Sunucudan bir yanıt alındı ve 2xx aralığında değil
+          console.error("Response Error Data:", error.response.data);
+          console.error("Response Status:", error.response.status);
+          console.error("Response Headers:", error.response.headers);
+        } else if (error.request) {
+          // İstek yapıldı, ancak herhangi bir yanıt alınmadı
+          console.error("Request Error:", error.request);
+        } else {
+          // İstek yapılandırırken bir şeyler ters gitti
+          console.error('Error', error.message);
+        }
+        console.error("Config:", error.config);
       }
     }
   };
-
 
   const getAllUsers = async () => {
     let accessToken = localStorage.getItem('accessToken');
@@ -332,15 +344,14 @@ const UserListRegularPage = () => {
     }
   };
   useEffect(() => {
-    getAllPersons()
     getAllCategories()
     getAllTags()
     getAllRegions()
     getAllCountries()
-    getAllCities()
     getAllUsers()
 
   }, [])
+
 
   const formatDate = (date) => {
     if (!date) return '';
@@ -370,33 +381,87 @@ const UserListRegularPage = () => {
 
 
   const [selectedCategory, setSelectedCategory] = useState([]);
-  const [selectedRegion, setSelectedRegion] = useState([]);
+  const [selectedFiltreCategory, setSelectedFiltreCategory] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState(null);
+
   const [selectedCity, setSelectedCity] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState([]);
-  const [selectedUser, setSelectedUser] = useState([]);
+  const [selectedRepresentative, setSelectedRepresentative] = useState([]);
 
 
   const [selectedTag, setSelectedTag] = useState([]);
+  const [selectedFiltreTag, setSelectedFiltreTag] = useState([]);
   const handleCategoryChange = (selectedOptions) => {
     setSelectedCategory(selectedOptions);
   };
+  const handleFiltreCategoryChange = (selectedOptions) => {
+    setSelectedFiltreCategory(selectedOptions);
+    getAllPersons(); // Filtre değiştiğinde verileri yeniden getir
+  };
+
+  const handleFiltreTagChange = (selectedOptions) => {
+    setSelectedFiltreTag(selectedOptions);
+    getAllPersons(); // Filtre değiştiğinde verileri yeniden getir
+  };
+  useEffect(() => {
+    getAllPersons();
+  }, [selectedFiltreCategory, selectedFiltreTag]);
   const handleUserChange = (selectedOptions) => {
-    setSelectedUser(selectedOptions);
+    setSelectedRepresentative(selectedOptions);
   };
 
   const handleTagChange = (selectedOptions) => {
     setSelectedTag(selectedOptions);
   };
-  const handleRegionChange = (selectedOptions) => {
-    setSelectedRegion(selectedOptions);
+  const handleRegionChange = async (selectedOption) => {
+    setFormData({ ...formData, city: selectedOption.value });
+    setSelectedRegion(selectedOption);
+    const selectedOptionValue = selectedOption.value
+
+
+    // İlçe API isteği
+    let accessToken = localStorage.getItem('accessToken');
+    try {
+      const response = await axios.get(`https://tiosone.com/hub/api/cities/?region=${selectedOptionValue}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setCities(response.data); // İlçeleri güncelle
+      setSelectedCity(null); // İlçe seçimini sıfırla
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get(`https://tiosone.com/hub/api/cities/?region=${selectedOptionValue}`, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setCities(response.data);
+            setSelectedCity(null);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
+    }
   };
+
   const handleCityChange = (selectedOptions) => {
     setSelectedCity(selectedOptions);
   };
   const handleCountryChange = (selectedOptions) => {
     setSelectedCountry(selectedOptions);
   };
-  console.log(selectedRegion)
+
 
 
   const [sm, updateSm] = useState(false);
@@ -424,7 +489,7 @@ const UserListRegularPage = () => {
     website: "",
     is_active: null,
     customer_representatives: [],
-    user: ""
+
   });
   const [editId, setEditedId] = useState();
   const [view, setView] = useState({
@@ -501,16 +566,16 @@ const UserListRegularPage = () => {
       job_title: job_title,
       categories: selectedCategory.map((category) => category.value),
       tags: selectedTag.map((tag) => tag.value),
-      country: selectedCountry.value,
-      city: selectedRegion.value,
-      district: selectedCity.value,
+      country: selectedCountry ? selectedCountry.value : null,
+      city: selectedRegion ? selectedRegion.value : null,
+      district: selectedCity ? selectedCity.value : null,
       address_line: address_line,
       phone: phone,
       email: email,
       website: "",
       is_active: true,
       added_by: [1],
-      user: formData.user
+      customer_representatives: selectedRepresentative.map((representative) => representative.value),
     };
 
     console.log(submittedData);
@@ -573,7 +638,7 @@ const UserListRegularPage = () => {
         console.error("Response Error:", error.response.data);
         console.error("Response Status:", error.response.status);
         console.error("Response Headers:", error.response.headers);
-        toast.error("Kişi Eklenirken Bir sorun Oluştu.", {
+        toast.error("Kişi Eklenirken Bir Hata Oluştu.", {
           position: "top-right",
           autoClose: 2000,
           hideProgressBar: true,
@@ -585,6 +650,7 @@ const UserListRegularPage = () => {
       }
     }
   };
+
 
 
 
@@ -615,9 +681,8 @@ const UserListRegularPage = () => {
           email: formData.email,
           website: formData.website,
           is_active: formData.is_active,
-          customer_representatives: formData.customer_representatives,
+          customer_representatives: formData.customer_representatives.map(representative => representative.value || representative),
           added_by: [1],
-          user: formData.user
         };
       }
     });
@@ -680,7 +745,7 @@ const UserListRegularPage = () => {
           website: item.website,
           is_active: item.is_active,
           customer_representatives: item.customer_representatives,
-          user: item.user
+
         });
 
         // Yeni eklenen kodlar
@@ -728,13 +793,17 @@ const UserListRegularPage = () => {
   const deletePersons = async (id) => {
     let accessToken = localStorage.getItem('accessToken');
 
-    try {
+    const deletePersonRequest = async (token) => {
       await axios.delete(`${BASE_URL}persons/${id}`, {
         headers: {
-          "Authorization": `Bearer ${accessToken}`,
+          "Authorization": `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+    };
+
+    try {
+      await deletePersonRequest(accessToken);
       let updatedData = data.filter((item) => item.id !== id);
       setData([...updatedData]);
       setOriginalData([...updatedData]);
@@ -748,16 +817,53 @@ const UserListRegularPage = () => {
         progress: false,
       });
     } catch (error) {
-      console.error("There was an error deleting the product!", error);
-      Swal.fire({
-        icon: "error",
-        title: "Hata!",
-        text: "Ürün silinirken bir hata oluştu!",
-        timer: 2000,
-        showConfirmButton: false
-      });
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            await deletePersonRequest(accessToken);
+            let updatedData = data.filter((item) => item.id !== id);
+            setData([...updatedData]);
+            setOriginalData([...updatedData]);
+            toast.warning("Kişi Başarıyla Silindi", {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: false,
+            });
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+            toast.error("Ürün Silinirken Bir Hata Oluştu.", {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: false,
+            });
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error deleting the product!", error);
+        toast.error("Ürün Silinirken Bir Hata Oluştu.", {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: false,
+        });
+      }
     }
   };
+
 
 
   // function to delete the seletected item
@@ -793,12 +899,7 @@ const UserListRegularPage = () => {
     <>
       <Head title="PersonPage"></Head>
       <Content>
-        {alertVisible && (
-          <Alert className="alert-icon" color={alertColor}>
-            <Icon name="alert-circle" />
-            <strong>{alertMessage.includes("hata") ? "Hata: " : "Başarılı: "}</strong> {alertMessage}
-          </Alert>
-        )}
+
 
         <ToastContainer />
         <BlockHead size="sm">
@@ -812,32 +913,21 @@ const UserListRegularPage = () => {
             <BlockHeadContent>
               <div className="toggle-wrap nk-block-tools-toggle">
 
-                <div className="toggle-expand-content" style={{ display: sm ? "block" : "none" }}>
-                  <ul className="nk-block-tools g-3">
+                <div className="">
+                  <Button
+                    className="toggle d-inline-flex"
+                    color="primary"
+                    onClick={() => {
+                      toggle("add");
+                    }}
+                  >
+
+                    <span>Yeni Kişi Ekle</span>
+                  </Button>
 
 
-                    <li className="nk-block-tools-opt">
-                      <Button
-                        className="toggle btn btn-primary d-md-none"
-                        color="primary"
-                        onClick={() => {
-                          toggle("add");
-                        }}
-                      >
-                        Yeni Kişi Ekle
-                      </Button>
-                      <Button
-                        className="toggle d-none d-md-inline-flex"
-                        color="primary"
-                        onClick={() => {
-                          toggle("add");
-                        }}
-                      >
 
-                        <span>Yeni Kişi Ekle</span>
-                      </Button>
-                    </li>
-                  </ul>
+
                 </div>
               </div>
             </BlockHeadContent>
@@ -845,7 +935,7 @@ const UserListRegularPage = () => {
           </BlockBetween>
 
         </BlockHead>
-        <ul className="nk-block-tools gx-3" style={{ paddingBottom: "1.75rem" }}>
+        <ul className="nk-block-tools persons-tools-ul d-md-flex d-inline-block" style={{ paddingBottom: "1.75rem" }}>
           <li>
             <div className="form-control-wrap">
               <div className="form-icon form-icon-left">
@@ -853,42 +943,39 @@ const UserListRegularPage = () => {
               </div>
               <input
                 type="text"
-                className="form-control"
+                className="form-control "
                 id="default-04"
-                placeholder="Kişilerde ara..."
+                placeholder="Kişilerde Ara..."
                 onChange={(e) => onFilterChange(e)}
               />
             </div>
           </li>
-          <li>
-            <UncontrolledDropdown>
-              <DropdownToggle
-                color="transparent"
-                className="dropdown-toggle dropdown-indicator btn btn-outline-light btn-white"
-              >
-                Kategori
-              </DropdownToggle>
-              <DropdownMenu end>
-                <ul className="link-list-opt no-bdr">
 
-                </ul>
-              </DropdownMenu>
-            </UncontrolledDropdown>
+          <li>
+            <div className="form-group">
+
+              <RSelect
+                name="category"
+                isMulti
+                placeholder="Kategori"
+                options={formattedCategories}
+                onChange={(selectedOptions) => handleFiltreCategoryChange(selectedOptions)}
+                value={selectedFiltreCategory}
+              />
+            </div>
           </li>
-          <li>
-            <UncontrolledDropdown>
-              <DropdownToggle
-                color="transparent"
-                className="dropdown-toggle dropdown-indicator btn btn-outline-light btn-white"
-              >
-                Etiket
-              </DropdownToggle>
-              <DropdownMenu end>
-                <ul className="link-list-opt no-bdr">
+          <li className="d-md-inline-block d-none">
+            <div className="form-group">
 
-                </ul>
-              </DropdownMenu>
-            </UncontrolledDropdown>
+              <RSelect
+                name="tag"
+                isMulti
+                placeholder="Etiket"
+                options={formattedTags}
+                onChange={(selectedOptions) => handleFiltreTagChange(selectedOptions)}
+                value={selectedFiltreTag}
+              />
+            </div>
           </li>
 
 
@@ -921,7 +1008,7 @@ const UserListRegularPage = () => {
                       <DataTableRow>
                         <span>Kategori</span>
                       </DataTableRow>
-                      <DataTableRow size="md">
+                      <DataTableRow size="sm">
                         <span>Etiket</span>
                       </DataTableRow>
                       <DataTableRow size="md">
@@ -936,7 +1023,7 @@ const UserListRegularPage = () => {
 
                       <DataTableRow className="nk-tb-col-tools">
                         <ul className="nk-tb-actions gx-1 my-n1">
-                          <li className="me-n1">
+                          <li className="me-n1 d-none">
                             <UncontrolledDropdown>
                               <DropdownToggle
                                 tag="a"
@@ -946,8 +1033,8 @@ const UserListRegularPage = () => {
                               >
                                 <Icon name="more-h"></Icon>
                               </DropdownToggle>
-                              <DropdownMenu end>
-                                <ul className="link-list-opt no-bdr">
+                              <DropdownMenu className="" end>
+                                <ul className="link-list-opt no-bdr ">
                                   <li>
                                     <DropdownItem tag="a" href="#edit" onClick={(ev) => ev.preventDefault()}>
                                       <Icon name="edit"></Icon>
@@ -1028,7 +1115,7 @@ const UserListRegularPage = () => {
                                 ) : null;
                               })}
                             </DataTableRow>
-                            <DataTableRow>
+                            <DataTableRow size="sm">
                               {item.tags && item.tags.length > 0 && item.tags.map((tagId, index) => {
                                 const tag = tags.find(tag => tag.id === tagId);
                                 return tag ? (
@@ -1038,7 +1125,7 @@ const UserListRegularPage = () => {
                                 ) : null;
                               })}
                             </DataTableRow>
-                            <DataTableRow>
+                            <DataTableRow size="md">
                               {(() => {
                                 const region = regions.find(reg => reg.id === item.city);
                                 return (
@@ -1048,10 +1135,16 @@ const UserListRegularPage = () => {
                               })()}
                             </DataTableRow>
                             <DataTableRow size="md">
-
-                              <span style={{ paddingLeft: "5px" }} className="tb-sub">{item.user}</span>
+                              {item.customer_representatives && item.customer_representatives.length > 0 && item.customer_representatives.map((representativeId, index) => {
+                                const representative = user.find(cat => cat.id === representativeId);
+                                return representative ? (
+                                  <span key={index} className="badge bg-outline-secondary me-1">
+                                    {representative.username}
+                                  </span>
+                                ) : null;
+                              })}
                             </DataTableRow>
-                            <DataTableRow>
+                            <DataTableRow size="md">
                               <span className={`tb-status text-${item.is_active ? "success" : "danger"}`}>
                                 {item.is_active ? "Aktif" : "Pasif"}
                               </span>
@@ -1254,6 +1347,7 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            placeholder="Kategori"
                             isMulti
                             options={formattedCategories}
                             value={formData.categories.map(categoryId => formattedCategories.find(category => category.value === categoryId))}
@@ -1272,6 +1366,7 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            placeholder="Etiket"
                             isMulti
                             options={formattedTags}
                             value={formData.tags.length > 0 ? formData.tags.map(tagId => formattedTags.find(tag => tag.value === tagId)) : []}
@@ -1290,6 +1385,7 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            placeholder="Ülke"
                             options={formattedCountries}
                             value={formattedCountries.find(option => option.value === formData.country)}
                             onChange={(selectedOption) => {
@@ -1307,6 +1403,7 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            placeholder="Şehir"
                             options={formattedRegions}
                             value={formattedRegions.find(option => option.value === formData.city)}
                             onChange={(selectedOption) => {
@@ -1324,6 +1421,7 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            placeholder="İlçe"
                             options={formattedCities}
                             value={formattedCities.find(option => option.value === formData.district)}
                             onChange={(selectedOption) => {
@@ -1410,7 +1508,7 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
-
+                            placeholder="Durum"
                             options={durum}
                             value={durum.find(option => option.value === formData.is_active)}
                             onChange={(selectedOptions) => setFormData({ ...formData, is_active: selectedOptions.value })}
@@ -1426,12 +1524,14 @@ const UserListRegularPage = () => {
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            placeholder="Temsilci"
+                            isMulti
                             options={formattedUser}
-                            value={formattedUser.find(option => option.value === formData.user)}
-                            onChange={(selectedOption) => {
-                              setFormData({ ...formData, user: selectedOption.value });
-                              setSelectedCity(selectedOption);
-                            }}
+                            value={formData.customer_representatives.map(representativeId => formattedUser.find(representative => representative.value === representativeId))}
+                            onChange={(selectedOptions) => setFormData({
+                              ...formData,
+                              customer_representatives: selectedOptions.map(option => option.value)
+                            })}
                           />
                         </div>
                       </div>
@@ -1480,10 +1580,7 @@ const UserListRegularPage = () => {
                   <span className="sub-text">Şirket</span>
                   <span className="caption-text">{formData.company}</span>
                 </Col>
-                <Col lg={4}>
-                  <span className="sub-text">Departman</span>
-                  <span className="caption-text">{formData.department}</span>
-                </Col>
+
                 <Col lg={4}>
                   <span className="sub-text">Ünvan</span>
                   <span className="caption-text">{formData.job_title}</span>
@@ -1517,15 +1614,42 @@ const UserListRegularPage = () => {
                 </Col>
                 <Col lg={4}>
                   <span className="sub-text">Ülke</span>
-                  <span className="caption-text">{formData.country}</span>
+                  {(() => {
+                    const country = countries.find(reg => reg.id === formData.country);
+                    return (
+                      <span className="caption-text"> {country ? country.name : ''}</span>
+
+                    );
+                  })()}
+
+
+
                 </Col>
                 <Col lg={4}>
                   <span className="sub-text">Şehir</span>
-                  <span className="caption-text">{formData.city}</span>
+                  {(() => {
+                    const region = regions.find(reg => reg.id === formData.city);
+                    return (
+                      <span className="caption-text"> {region ? region.name : ''}</span>
+
+                    );
+                  })()}
+
+
+
                 </Col>
                 <Col lg={4}>
                   <span className="sub-text">İlçe</span>
-                  <span className="caption-text">{formData.district}</span>
+                  {(() => {
+                    const city = cities.find(reg => reg.id === formData.district);
+                    return (
+                      <span className="caption-text"> {city ? city.name : ''}</span>
+
+                    );
+                  })()}
+
+
+
                 </Col>
                 <Col lg={4}>
                   <span className="sub-text">Adres</span>
@@ -1550,11 +1674,14 @@ const UserListRegularPage = () => {
                 <Col lg={4}>
                   <span className="sub-text">Temsilci</span>
                   <span className="caption-text">
-                    {formData.customer_representatives.map((item, index) => (
-                      <span key={index} className="badge bg-outline-secondary me-1">
-                        {item}
-                      </span>
-                    ))}
+                    {formData.customer_representatives.map((representativeId, index) => {
+                      const representative = user.find(rep => rep.id === representativeId);
+                      return representative ? (
+                        <span key={index} className="badge bg-outline-secondary me-1">
+                          {representative.username}
+                        </span>
+                      ) : null;
+                    })}
                   </span>
                 </Col>
 
@@ -1711,23 +1838,7 @@ const UserListRegularPage = () => {
                     Kategorilendirme
                   </h6>
                 </BlockDes>
-                <Col size="6">
-                  <div className="form-group">
-                    <label className="form-label text-soft">
 
-                      Departman
-
-                    </label>
-
-                    <div className="form-control-wrap">
-                      <RSelect
-                        name="tag"
-
-                        placeholder="Departman"
-                      />
-                    </div>
-                  </div>
-                </Col>
                 <Col size="6">
                   <div className="form-group">
                     <label className="form-label text-soft">
@@ -1738,12 +1849,12 @@ const UserListRegularPage = () => {
 
                     <div className="form-control-wrap">
                       <RSelect
-                        name="category"
+                        name="representative"
                         isMulti
-                        placeholder="Kategori"
+                        placeholder="Temsilci"
                         options={formattedUser}
                         onChange={(selectedOptions) => handleUserChange(selectedOptions)}
-                        value={selectedUser}
+                        value={selectedRepresentative}
                       />
                     </div>
                   </div>
@@ -1818,6 +1929,26 @@ const UserListRegularPage = () => {
                   <div className="form-group">
                     <label className="form-label text-soft">
 
+                      Ülke
+
+                    </label>
+
+                    <div className="form-control-wrap">
+                      <RSelect
+                        name="ulke"
+                        placeholder="Ülke"
+                        options={formattedCountries}
+                        onChange={(selectedOptions) => handleCountryChange(selectedOptions)}
+                        value={selectedCountry}
+                      />
+
+                    </div>
+                  </div>
+                </Col>
+                <Col size="12">
+                  <div className="form-group">
+                    <label className="form-label text-soft">
+
                       Şehir
 
                     </label>
@@ -1850,31 +1981,13 @@ const UserListRegularPage = () => {
                         options={formattedCities}
                         onChange={(selectedOptions) => handleCityChange(selectedOptions)}
                         value={selectedCity}
+                        isDisabled={selectedRegion ? false : true}
                       />
 
                     </div>
                   </div>
                 </Col>
-                <Col size="12">
-                  <div className="form-group">
-                    <label className="form-label text-soft">
 
-                      Ülke
-
-                    </label>
-
-                    <div className="form-control-wrap">
-                      <RSelect
-                        name="ulke"
-                        placeholder="Ülke"
-                        options={formattedCountries}
-                        onChange={(selectedOptions) => handleCountryChange(selectedOptions)}
-                        value={selectedCountry}
-                      />
-
-                    </div>
-                  </div>
-                </Col>
                 <Col size="12">
                   <div className="flex justify-end">
 

@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { RSelect } from "../../../components/Component";
 import DatePicker from "react-datepicker";
+import { ToastContainer, toast } from 'react-toastify';
 import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, ButtonGroup, Modal, ModalBody } from "reactstrap";
 
 import {
@@ -36,7 +37,80 @@ const BASE_URL = "https://tiosone.com/customers/api/"
 
 const CompanyList = () => {
     const [data, setData] = useState([]);
+    const [regions, setRegions] = useState([]);
+    const [countries, setCountries] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [user, setUser] = useState([]);
     console.log(data)
+    const getAllRegions = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axios.get("https://tiosone.com/hub/api/regions/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setRegions(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    try {
+                        const response = await axios.get("https://tiosone.com/hub/api/regions/", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        setRegions(response.data);
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
+                } else {
+                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+                }
+            } else {
+                console.error("There was an error fetching the data!", error);
+            }
+        }
+    };
+
+    const getAllCountries = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axios.get("https://tiosone.com/hub/api/countries/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setCountries(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    try {
+                        const response = await axios.get("https://tiosone.com/hub/api/countries/", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        setCountries(response.data);
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
+                } else {
+                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+                }
+            } else {
+                console.error("There was an error fetching the data!", error);
+            }
+        }
+    };
 
     const getAllCategories = async () => {
         let accessToken = localStorage.getItem('accessToken');
@@ -138,22 +212,54 @@ const CompanyList = () => {
     const getAllCompanies = async () => {
         let accessToken = localStorage.getItem('accessToken');
 
-
         try {
-            const response = await axios.get(BASE_URL + "companies/", {
+            let url = "companies/";
+            let query = [];
+
+            if (selectedFiltreCategory && selectedFiltreCategory.length > 0) {
+                const categories = selectedFiltreCategory.map(item => item.label).join(',');
+                query.push(`categories=${categories}`);
+            }
+
+            if (selectedFiltreTag && selectedFiltreTag.length > 0) {
+                const tags = selectedFiltreTag.map(item => item.label).join(',');
+                query.push(`tags=${tags}`);
+            }
+
+            if (query.length > 0) {
+                url += '?' + query.join('&');
+            }
+
+            console.log("Constructed URL:", BASE_URL + url);
+            console.log("Selected Categories:", selectedFiltreCategory.map(item => item.label));
+            console.log("Selected Tags:", selectedFiltreTag.map(item => item.label));
+
+            const response = await axios.get(BASE_URL + url, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
                 }
             });
+
+            if (response.data.length === 0) {
+                toast.warning("Herhangi bir müşteri bulunamadı", {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: true,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: false,
+                });
+            }
+
             setData(response.data);
             setOriginalData(response.data);
+
         } catch (error) {
             if (error.response && error.response.status === 401) {
-
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
-
                     try {
                         const response = await axios.get(BASE_URL + "companies/", {
                             headers: {
@@ -166,40 +272,165 @@ const CompanyList = () => {
                     } catch (retryError) {
                         console.error("Retry error after refreshing token", retryError);
                     }
+                } else {
+                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+                }
+            } else {
+                if (error.response) {
+                    // Sunucudan bir yanıt alındı ve 2xx aralığında değil
+                    console.error("Response Error Data:", error.response.data);
+                    console.error("Response Status:", error.response.status);
+                    console.error("Response Headers:", error.response.headers);
+                } else if (error.request) {
+                    // İstek yapıldı, ancak herhangi bir yanıt alınmadı
+                    console.error("Request Error:", error.request);
+                } else {
+                    // İstek yapılandırırken bir şeyler ters gitti
+                    console.error('Error', error.message);
+                }
+                console.error("Config:", error.config);
+            }
+        }
+    };
+    const getAllUsers = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+
+        try {
+            const response = await axios.get("https://tiosone.com/users/api/users/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setUser(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+
+                    try {
+                        const response = await axios.get("https://tiosone.com/users/api/users/", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        setUser(response.data);
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
                 }
             } else {
                 console.error("There was an error fetching the data!", error);
             }
         }
     };
-    useEffect(() => {
-        getAllCompanies()
 
-    }, [])
+    const formatDataForSelect = (data, labelKey, valueKey) => {
+        return data.map(item => ({
+            value: item[valueKey],
+            label: item[labelKey]
+        }));
+    };
+
     const [categories, setCategories] = useState([]);
+    const [selectedFiltreCategory, setSelectedFiltreCategory] = useState([]);
+    const [selectedFiltreTag, setSelectedFiltreTag] = useState([]);
+    const [selectedRegion, setSelectedRegion] = useState(null);
+
+    const [selectedCity, setSelectedCity] = useState([]);
+    const [selectedCountry, setSelectedCountry] = useState([]);
+    const [selectedRepresentative, setSelectedRepresentative] = useState([]);
     const [tags, setTags] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState([]);
     const [selectedTag, setSelectedTag] = useState([]);
-    const formattedCategories = categories.map(category => ({
-        value: category.id,
-        label: category.name
-    }));
-    const formattedTags = tags.map(tag => ({
-        value: tag.id,
-        label: tag.name
-    }));
+    const formattedCategories = formatDataForSelect(categories, "name", "id");
+    const formattedTags = formatDataForSelect(tags, "name", "id");
+    const formattedRegions = formatDataForSelect(regions, "display_name", "id");
+
+    const formattedCities = formatDataForSelect(cities, "display_name", "id");
+    const formattedCountries = formatDataForSelect(countries, "name", "id");
+    const formattedUser = formatDataForSelect(user, "username", "id");
+
+
     const handleCategoryChange = (selectedOption) => {
         setSelectedCategory(selectedOption);
     };
     const handleTagChange = (selectedOption) => {
-        setSelectedTag(selectedOption);
+        setSelectedTag(selectedOption || []);
+    };
+    const handleFiltreCategoryChange = (selectedOptions) => {
+        setSelectedFiltreCategory(selectedOptions || []);
+        getAllCompanies(); // Filtre değiştiğinde verileri yeniden getir
+    };
+    const handleCityChange = (selectedOptions) => {
+        setSelectedCity(selectedOptions || []);
+    };
+    const handleCountryChange = (selectedOptions) => {
+        setSelectedCountry(selectedOptions || []);
+    };
+    const handleRegionChange = async (selectedOption) => {
+        setFormData({ ...formData, city: selectedOption ? selectedOption.value : null });
+        setSelectedRegion(selectedOption || null);
+
+        if (selectedOption) {
+            const selectedOptionValue = selectedOption.value;
+            // İlçe API isteği
+            let accessToken = localStorage.getItem('accessToken');
+            try {
+                const response = await axios.get(`https://tiosone.com/hub/api/cities/?region=${selectedOptionValue}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                setCities(response.data); // İlçeleri güncelle
+                setSelectedCity(null); // İlçe seçimini sıfırla
+            } catch (error) {
+                if (error.response && error.response.status === 401) {
+                    accessToken = await refreshAccessToken();
+                    if (accessToken) {
+                        try {
+                            const response = await axios.get(`https://tiosone.com/hub/api/cities/?region=${selectedOptionValue}`, {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+                                }
+                            });
+                            setCities(response.data);
+                            setSelectedCity(null);
+                        } catch (retryError) {
+                            console.error("Retry error after refreshing token", retryError);
+                        }
+                    } else {
+                        window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+                    }
+                } else {
+                    console.error("There was an error fetching the data!", error);
+                }
+            }
+        }
+    };
+
+
+    const handleFiltreTagChange = (selectedOptions) => {
+        setSelectedFiltreTag(selectedOptions || []);
+        getAllCompanies(); // Filtre değiştiğinde verileri yeniden getir
+    };
+    useEffect(() => {
+        getAllCompanies();
+    }, [selectedFiltreCategory, selectedFiltreTag]);
+    const handleUserChange = (selectedOptions) => {
+        setSelectedRepresentative(selectedOptions);
     };
     useEffect(() => {
         getAllCategories()
-
-    }, [])
-    useEffect(() => {
         getAllTags()
+        getAllRegions()
+        getAllCountries()
+        getAllUsers()
 
     }, [])
     const [sm, updateSm] = useState(false);
@@ -294,27 +525,27 @@ const CompanyList = () => {
 
     const onFormSubmit = async (form) => {
         let accessToken = localStorage.getItem('accessToken');
-        const { name, industry, size, tax_number, tax_office, email, phone, address_line } = form;
+        const { name, industry, size, tax_number, tax_office, email, phone, address_line, website } = form;
 
         let submittedData = {
             name: name,
             industry: industry || "",
             size: size || null,
-            //  categories: [],
-            //  tags: [],
-            // added_by: "admin",
-            //  updated_by: "admin64",
-            //  tax_number: tax_number,
-            //  tax_office: tax_office,
-            // country: "Türkiye",
-            //  city: "Denizli",
-            //  district: "Pamukkale",
-            //  address_line: address_line,
-            //  phone: phone,
+            categories: selectedCategory.map((category) => category.value),
+            tags: selectedTag.map((tag) => tag.value),
+            added_by: "admin64",
+            updated_by: "admin64",
+            tax_number: tax_number,
+            tax_office: tax_office,
+            address_line: address_line,
+            country: selectedCountry ? selectedCountry.value : null,
+            city: selectedRegion ? selectedRegion.value : null,
+            district: selectedCity ? selectedCity.value : null,
+            phone: phone,
             email: email || "",
-            //  website: "http://johndoe.com",
-            // is_active: true,
-            // customer_representatives: [1]
+            website: "http://johndoe.com",
+            is_active: true,
+            customer_representatives: selectedRepresentative.map((representative) => representative.value),
         };
         console.log(submittedData)
 
@@ -347,19 +578,20 @@ const CompanyList = () => {
                     name: formData.name,
                     industry: formData.industry,
                     size: formData.size,
-                    // categories: formData.categories,
-                    //  tags: formData.tags,
-                    //  tax_number: formData.tax_number,
-                    //  tax_office: formData.tax_office,
-                    // country: formData.country,
-                    // city: formData.city,
-                    //  district: formData.district,
-                    //  address_line: formData.address_line,
-                    //  phone: formData.phone,
+                    categories: (formData.categories && formData.categories.map(category => category.value || category)) || [],
+                    tags: (formData.tags && formData.tags.map(tag => tag.value || tag)) || [],
+                    tax_number: formData.tax_number,
+                    tax_office: formData.tax_office,
+                    country: formData.country,
+                    city: formData.city,
+                    district: formData.district,
+                    address_line: formData.address_line,
+                    phone: formData.phone,
                     email: formData.email,
-                    //  website: formData.website,
-                    // is_active: formData.is_active,
-                    // customer_representatives: formData.customer_representatives,
+                    website: formData.website,
+                    is_active: formData.is_active,
+                    customer_representatives: (formData.customer_representatives && formData.customer_representatives.map(representative => representative.value || representative)) || [],
+                    added_by: [1],
                 };
             }
         });
@@ -382,6 +614,7 @@ const CompanyList = () => {
         }
     };
 
+
     const onEditClick = (id) => {
         data.forEach((item) => {
             if (item.id === id) {
@@ -400,7 +633,7 @@ const CompanyList = () => {
                     phone: item.phone,
                     email: item.email,
                     website: item.website,
-                    is_active: true,
+                    is_active: item.is_active,
                     customer_representatives: item.customer_representatives,
                 });
             }
@@ -436,20 +669,77 @@ const CompanyList = () => {
     };
 
     // function to delete a product
-    const deleteProduct = async (id) => {
+    const deleteCompany = async (id) => {
         let accessToken = localStorage.getItem('accessToken');
 
-        try {
+        const deletePersonRequest = async (token) => {
             await axios.delete(`${BASE_URL}companies/${id}`, {
                 headers: {
-                    "Authorization": `Bearer ${accessToken}`,
+                    "Authorization": `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
+        };
+
+        try {
+            await deletePersonRequest(accessToken);
             let updatedData = data.filter((item) => item.id !== id);
             setData([...updatedData]);
+            setOriginalData([...updatedData]);
+            toast.warning("Kişi Başarıyla Silindi", {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: false,
+            });
         } catch (error) {
-            console.error("There was an error deleting the product!", error);
+            if (error.response && error.response.status === 401) {
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    try {
+                        await deletePersonRequest(accessToken);
+                        let updatedData = data.filter((item) => item.id !== id);
+                        setData([...updatedData]);
+                        setOriginalData([...updatedData]);
+                        toast.warning("Kişi Başarıyla Silindi", {
+                            position: "top-right",
+                            autoClose: 2000,
+                            hideProgressBar: true,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: false,
+                        });
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                        toast.error("Ürün Silinirken Bir Hata Oluştu.", {
+                            position: "top-right",
+                            autoClose: 2000,
+                            hideProgressBar: true,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: true,
+                            progress: false,
+                        });
+                    }
+                } else {
+                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+                }
+            } else {
+                console.error("There was an error deleting the product!", error);
+                toast.error("Ürün Silinirken Bir Hata Oluştu.", {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: true,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: false,
+                });
+            }
         }
     };
 
@@ -480,7 +770,9 @@ const CompanyList = () => {
     return (
         <>
             <Head title="Homepage"></Head>
+
             <Content>
+                <ToastContainer />
                 <BlockHead size="sm">
                     <BlockBetween>
                         <BlockHeadContent>
@@ -491,42 +783,22 @@ const CompanyList = () => {
 
                         <BlockHeadContent>
                             <div className="toggle-wrap nk-block-tools-toggle">
-                                <a
-                                    href="#more"
-                                    className="btn btn-icon btn-trigger toggle-expand me-n1"
-                                    onClick={(ev) => {
-                                        ev.preventDefault();
-                                        updateSm(!sm);
-                                    }}
-                                >
-                                    <Icon name="more-v"></Icon>
-                                </a>
-                                <div className="toggle-expand-content" style={{ display: sm ? "block" : "none" }}>
-                                    <ul className="nk-block-tools g-3">
+
+                                <div className="">
+                                    <Button
+                                        className="toggle d-inline-flex"
+                                        color="primary"
+                                        onClick={() => {
+                                            toggle("add");
+                                        }}
+                                    >
+
+                                        <span>Yeni Firma Ekle</span>
+                                    </Button>
 
 
-                                        <li className="nk-block-tools-opt">
-                                            <Button
-                                                className="toggle btn btn-primary d-md-none"
-                                                color="primary"
-                                                onClick={() => {
-                                                    toggle("add");
-                                                }}
-                                            >
-                                                Yeni Firma Ekle
-                                            </Button>
-                                            <Button
-                                                className="toggle d-none d-md-inline-flex"
-                                                color="primary"
-                                                onClick={() => {
-                                                    toggle("add");
-                                                }}
-                                            >
 
-                                                <span>Yeni Firma Ekle</span>
-                                            </Button>
-                                        </li>
-                                    </ul>
+
                                 </div>
                             </div>
                         </BlockHeadContent>
@@ -534,7 +806,7 @@ const CompanyList = () => {
                     </BlockBetween>
 
                 </BlockHead>
-                <ul className="nk-block-tools gx-3" style={{ paddingBottom: "1.75rem" }}>
+                <ul className="nk-block-tools persons-tools-ul d-md-flex d-inline-block" style={{ paddingBottom: "1.75rem" }}>
                     <li>
                         <div className="form-control-wrap">
                             <div className="form-icon form-icon-left">
@@ -542,42 +814,39 @@ const CompanyList = () => {
                             </div>
                             <input
                                 type="text"
-                                className="form-control"
+                                className="form-control "
                                 id="default-04"
-                                placeholder="Firmalarda ara..."
+                                placeholder="Firmalarda Ara..."
                                 onChange={(e) => onFilterChange(e)}
                             />
                         </div>
                     </li>
-                    <li>
-                        <UncontrolledDropdown>
-                            <DropdownToggle
-                                color="transparent"
-                                className="dropdown-toggle dropdown-indicator btn btn-outline-light btn-white"
-                            >
-                                Kategori
-                            </DropdownToggle>
-                            <DropdownMenu end>
-                                <ul className="link-list-opt no-bdr">
 
-                                </ul>
-                            </DropdownMenu>
-                        </UncontrolledDropdown>
+                    <li>
+                        <div className="form-group">
+
+                            <RSelect
+                                name="category"
+                                isMulti
+                                placeholder="Kategori"
+                                options={formattedCategories}
+                                onChange={(selectedOptions) => handleFiltreCategoryChange(selectedOptions)}
+                                value={selectedFiltreCategory}
+                            />
+                        </div>
                     </li>
-                    <li>
-                        <UncontrolledDropdown>
-                            <DropdownToggle
-                                color="transparent"
-                                className="dropdown-toggle dropdown-indicator btn btn-outline-light btn-white"
-                            >
-                                Etiket
-                            </DropdownToggle>
-                            <DropdownMenu end>
-                                <ul className="link-list-opt no-bdr">
+                    <li className="d-md-inline-block d-none">
+                        <div className="form-group">
 
-                                </ul>
-                            </DropdownMenu>
-                        </UncontrolledDropdown>
+                            <RSelect
+                                name="tag"
+                                isMulti
+                                placeholder="Etiket"
+                                options={formattedTags}
+                                onChange={(selectedOptions) => handleFiltreTagChange(selectedOptions)}
+                                value={selectedFiltreTag}
+                            />
+                        </div>
                     </li>
 
 
@@ -613,7 +882,7 @@ const CompanyList = () => {
                                             <DataTableRow>
                                                 <span>Kategori</span>
                                             </DataTableRow>
-                                            <DataTableRow size="md">
+                                            <DataTableRow size="sm">
                                                 <span>Etiket</span>
                                             </DataTableRow>
                                             <DataTableRow size="md">
@@ -665,27 +934,39 @@ const CompanyList = () => {
                                                             <span className="tb-sub">{item.email}</span>
                                                         </DataTableRow>
                                                         <DataTableRow>
-                                                            {item.categories && item.categories.length > 0 && item.categories.map((category, index) => (
-                                                                <span key={index} className="badge bg-outline-secondary me-1">
-                                                                    {category.label}
-                                                                </span>
-                                                            ))}
+                                                            {item.categories && item.categories.length > 0 && item.categories.map((categoryId, index) => {
+                                                                const category = categories.find(cat => cat.id === categoryId);
+                                                                return category ? (
+                                                                    <span key={index} className="badge bg-outline-secondary me-1">
+                                                                        {category.name}
+                                                                    </span>
+                                                                ) : null;
+                                                            })}
                                                         </DataTableRow>
-                                                        <DataTableRow>
-                                                            {item.tags && item.tags.length > 0 && item.tags.map((tag, index) => (
-                                                                <span key={index} className="badge bg-outline-secondary me-1">
-                                                                    {tag.label}
-                                                                </span>
-                                                            ))}
+                                                        <DataTableRow size="sm">
+                                                            {item.tags && item.tags.length > 0 && item.tags.map((tagId, index) => {
+                                                                const tag = tags.find(tag => tag.id === tagId);
+                                                                return tag ? (
+                                                                    <span key={index} className="badge bg-outline-secondary me-1">
+                                                                        {tag.name}
+                                                                    </span>
+                                                                ) : null;
+                                                            })}
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
                                                             <span className="tb-sub">{item.size}</span>
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
-                                                            <img style={{ borderRadius: "50%", width: "25px" }} src={ProductH} alt="product" className="thumb" />
-                                                            <span style={{ paddingLeft: "5px" }} className="tb-sub"></span>
+                                                            {item.customer_representatives && item.customer_representatives.length > 0 && item.customer_representatives.map((representativeId, index) => {
+                                                                const representative = user.find(cat => cat.id === representativeId);
+                                                                return representative ? (
+                                                                    <span key={index} className="badge bg-outline-secondary me-1">
+                                                                        {representative.username}
+                                                                    </span>
+                                                                ) : null;
+                                                            })}
                                                         </DataTableRow>
-                                                        <DataTableRow>
+                                                        <DataTableRow size="md">
                                                             <span className={`tb-status text-${item.is_active ? "success" : "danger"}`}>
                                                                 {item.is_active ? "Aktif" : "Pasif"}
                                                             </span>
@@ -738,7 +1019,7 @@ const CompanyList = () => {
                                                                                         href="#remove"
                                                                                         onClick={(ev) => {
                                                                                             ev.preventDefault();
-                                                                                            deleteProduct(item.id);
+                                                                                            deleteCompany(item.id);
                                                                                         }}
                                                                                     >
                                                                                         <Icon name="trash"></Icon>
@@ -848,30 +1129,38 @@ const CompanyList = () => {
 
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="category">
+                                                <label className="form-label text-soft">
                                                     Kategori
                                                 </label>
                                                 <div className="form-control-wrap">
                                                     <RSelect
+                                                        placeholder="Kategori"
                                                         isMulti
                                                         options={formattedCategories}
-                                                        value={formData.categories}
-                                                        onChange={(value) => setFormData({ ...formData, categories: value })}
+                                                        value={formData.categories.map(categoryId => formattedCategories.find(category => category.value === categoryId))}
+                                                        onChange={(selectedOptions) => setFormData({
+                                                            ...formData,
+                                                            categories: selectedOptions.map(option => option.value)
+                                                        })}
                                                     />
                                                 </div>
                                             </div>
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="category">
-                                                    Etiketler
+                                                <label className="form-label text-soft">
+                                                    Etiket
                                                 </label>
                                                 <div className="form-control-wrap">
                                                     <RSelect
+                                                        placeholder="Etiket"
                                                         isMulti
                                                         options={formattedTags}
-                                                        value={formData.tags}
-                                                        onChange={(value) => setFormData({ ...formData, tags: value })}
+                                                        value={formData.tags.length > 0 ? formData.tags.map(tagId => formattedTags.find(tag => tag.value === tagId)) : []}
+                                                        onChange={(selectedOptions) => setFormData({
+                                                            ...formData,
+                                                            tags: selectedOptions ? selectedOptions.map(option => option.value) : []
+                                                        })}
                                                     />
                                                 </div>
                                             </div>
@@ -910,49 +1199,55 @@ const CompanyList = () => {
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="regular-price">
+                                                <label className="form-label text-soft" htmlFor="ulke">
                                                     Ülke
                                                 </label>
                                                 <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.country}
-                                                        onChange={(e) => setFormData({ ...formData, country: e.target.value })} />
-
+                                                    <RSelect
+                                                        placeholder="Ülke"
+                                                        options={formattedCountries}
+                                                        value={formattedCountries.find(option => option.value === formData.country)}
+                                                        onChange={(selectedOption) => {
+                                                            setFormData({ ...formData, country: selectedOption.value });
+                                                            setSelectedCountry(selectedOption);
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="regular-price">
+                                                <label className="form-label text-soft" htmlFor="sehir">
                                                     Şehir
                                                 </label>
                                                 <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.city}
-                                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
-
+                                                    <RSelect
+                                                        placeholder="Şehir"
+                                                        options={formattedRegions}
+                                                        value={formattedRegions.find(option => option.value === formData.city)}
+                                                        onChange={(selectedOption) => {
+                                                            setFormData({ ...formData, city: selectedOption.value });
+                                                            setSelectedRegion(selectedOption);
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="regular-price">
+                                                <label className="form-label text-soft" htmlFor="ilce">
                                                     İlçe
                                                 </label>
                                                 <div className="form-control-wrap">
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.district}
-                                                        onChange={(e) => setFormData({ ...formData, district: e.target.value })} />
-
+                                                    <RSelect
+                                                        placeholder="İlçe"
+                                                        options={formattedCities}
+                                                        value={formattedCities.find(option => option.value === formData.district)}
+                                                        onChange={(selectedOption) => {
+                                                            setFormData({ ...formData, district: selectedOption.value });
+                                                            setSelectedCity(selectedOption);
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
                                         </Col>
@@ -1022,15 +1317,15 @@ const CompanyList = () => {
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="category">
+                                                <label className="form-label">
                                                     Durum
                                                 </label>
                                                 <div className="form-control-wrap">
                                                     <RSelect
-
+                                                        placeholder="Durum"
                                                         options={durum}
                                                         value={durum.find(option => option.value === formData.is_active)}
-                                                        onChange={(selectedOption) => setFormData({ ...formData, is_active: selectedOption.value })}
+                                                        onChange={(selectedOptions) => setFormData({ ...formData, is_active: selectedOptions.value })}
 
                                                     />
                                                 </div>
@@ -1038,11 +1333,19 @@ const CompanyList = () => {
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="category">
+                                                <label className="form-label">
                                                     Temsilci
                                                 </label>
                                                 <div className="form-control-wrap">
                                                     <RSelect
+                                                        placeholder="Temsilci"
+                                                        isMulti
+                                                        options={formattedUser}
+                                                        value={formData.customer_representatives.map(representativeId => formattedUser.find(representative => representative.value === representativeId))}
+                                                        onChange={(selectedOptions) => setFormData({
+                                                            ...formData,
+                                                            customer_representatives: selectedOptions.map(option => option.value)
+                                                        })}
                                                     />
                                                 </div>
                                             </div>
@@ -1101,22 +1404,67 @@ const CompanyList = () => {
                                 <Col lg={4}>
                                     <span className="sub-text">Kategori</span>
                                     <span className="caption-text">
-                                        {formData.categories.map((item, index) => (
-                                            <span key={index} className="badge bg-outline-secondary me-1">
-                                                {item.label}
-                                            </span>
-                                        ))}
+                                        {formData.categories.map((categoryId, index) => {
+                                            const category = categories.find(cat => cat.id === categoryId);
+                                            return category ? (
+                                                <span key={index} className="badge bg-outline-secondary me-1">
+                                                    {category.name}
+                                                </span>
+                                            ) : null;
+                                        })}
                                     </span>
                                 </Col>
                                 <Col lg={4}>
                                     <span className="sub-text">Etiket</span>
                                     <span className="caption-text">
-                                        {formData.tags.map((item, index) => (
-                                            <span key={index} className="badge bg-outline-secondary me-1">
-                                                {item.label}
-                                            </span>
-                                        ))}
+                                        {formData.tags.map((tagId, index) => {
+                                            const tag = tags.find(cat => cat.id === tagId);
+                                            return tag ? (
+                                                <span key={index} className="badge bg-outline-secondary me-1">
+                                                    {tag.name}
+                                                </span>
+                                            ) : null;
+                                        })}
                                     </span>
+                                </Col>
+                                <Col lg={4}>
+                                    <span className="sub-text">Ülke</span>
+                                    {(() => {
+                                        const country = countries.find(reg => reg.id === formData.country);
+                                        return (
+                                            <span className="caption-text"> {country ? country.name : ''}</span>
+
+                                        );
+                                    })()}
+
+
+
+                                </Col>
+                                <Col lg={4}>
+                                    <span className="sub-text">Şehir</span>
+                                    {(() => {
+                                        const region = regions.find(reg => reg.id === formData.city);
+                                        return (
+                                            <span className="caption-text"> {region ? region.name : ''}</span>
+
+                                        );
+                                    })()}
+
+
+
+                                </Col>
+                                <Col lg={4}>
+                                    <span className="sub-text">İlçe</span>
+                                    {(() => {
+                                        const city = cities.find(reg => reg.id === formData.district);
+                                        return (
+                                            <span className="caption-text"> {city ? city.name : ''}</span>
+
+                                        );
+                                    })()}
+
+
+
                                 </Col>
                                 <Col lg={4}>
                                     <span className="sub-text">Vergi Numarası</span>
@@ -1126,18 +1474,7 @@ const CompanyList = () => {
                                     <span className="sub-text">Vergi Dairesi</span>
                                     <span className="caption-text">{formData.tax_office}</span>
                                 </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Ülke</span>
-                                    <span className="caption-text">{formData.country}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">Şehir</span>
-                                    <span className="caption-text">{formData.city}</span>
-                                </Col>
-                                <Col lg={4}>
-                                    <span className="sub-text">İlçe</span>
-                                    <span className="caption-text">{formData.district}</span>
-                                </Col>
+
                                 <Col lg={4}>
                                     <span className="sub-text">Adres</span>
                                     <span className="caption-text">{formData.address_line}</span>
@@ -1161,11 +1498,14 @@ const CompanyList = () => {
                                 <Col lg={4}>
                                     <span className="sub-text">Temsilci</span>
                                     <span className="caption-text">
-                                        {formData.customer_representatives.map((item, index) => (
-                                            <span key={index} className="badge bg-outline-secondary me-1">
-                                                {item}
-                                            </span>
-                                        ))}
+                                        {formData.customer_representatives.map((representativeId, index) => {
+                                            const representative = user.find(rep => rep.id === representativeId);
+                                            return representative ? (
+                                                <span key={index} className="badge bg-outline-secondary me-1">
+                                                    {representative.username}
+                                                </span>
+                                            ) : null;
+                                        })}
                                     </span>
                                 </Col>
 
@@ -1343,6 +1683,8 @@ const CompanyList = () => {
                                         </div>
                                     </div>
                                 </Col>
+
+
                                 <BlockDes>
                                     <h6 className="mt-3">
 
@@ -1352,20 +1694,31 @@ const CompanyList = () => {
 
                                 <Col size="6">
                                     <div className="form-group">
+                                        <label className="form-label text-soft">
+
+                                            Temsilci
+
+                                        </label>
 
                                         <div className="form-control-wrap">
-
                                             <RSelect
                                                 name="representative"
                                                 isMulti
                                                 placeholder="Temsilci"
+                                                options={formattedUser}
+                                                onChange={(selectedOptions) => handleUserChange(selectedOptions)}
+                                                value={selectedRepresentative}
                                             />
-
                                         </div>
                                     </div>
                                 </Col>
                                 <Col size="6">
                                     <div className="form-group">
+                                        <label className="form-label text-soft">
+
+                                            Kategori
+
+                                        </label>
 
                                         <div className="form-control-wrap">
                                             <RSelect
@@ -1373,16 +1726,19 @@ const CompanyList = () => {
                                                 isMulti
                                                 placeholder="Kategori"
                                                 options={formattedCategories}
-                                                onChange={(selectedOption) => handleCategoryChange(selectedOption)}
+                                                onChange={(selectedOptions) => handleCategoryChange(selectedOptions)}
                                                 value={selectedCategory}
-
                                             />
-
                                         </div>
                                     </div>
                                 </Col>
                                 <Col size="6">
                                     <div className="form-group">
+                                        <label className="form-label text-soft">
+
+                                            Etiket
+
+                                        </label>
 
                                         <div className="form-control-wrap">
                                             <RSelect
@@ -1390,7 +1746,7 @@ const CompanyList = () => {
                                                 isMulti
                                                 placeholder="Etiket"
                                                 options={formattedTags}
-                                                onChange={(selectedOption) => handleTagChange(selectedOption)}
+                                                onChange={(selectedOptions) => handleTagChange(selectedOptions)}
                                                 value={selectedTag} />
                                         </div>
                                     </div>
@@ -1403,15 +1759,18 @@ const CompanyList = () => {
                                 </BlockDes>
                                 <Col size="12">
                                     <div className="form-group">
-                                        <label className="form-label text-soft" htmlFor="adres">
+                                        <label htmlFor="adres" className="form-label text-soft">
+
                                             Adres
+
                                         </label>
 
                                         <div className="form-control-wrap">
                                             <input
+                                                id="adres"
                                                 type="text"
                                                 className="form-control"
-                                                id="adres"
+
                                                 placeholder="Adres"
                                                 value={formData.address_line}
                                                 onChange={(e) => setFormData({ ...formData, address_line: e.target.value })} />
@@ -1419,43 +1778,63 @@ const CompanyList = () => {
                                         </div>
                                     </div>
                                 </Col>
-                                <Col size="6">
+                                <Col size="12">
                                     <div className="form-group">
+                                        <label className="form-label text-soft">
+
+                                            Ülke
+
+                                        </label>
 
                                         <div className="form-control-wrap">
                                             <RSelect
-                                                name="category"
-                                                isMulti
-                                                placeholder="Şehir"
-
-                                            />
-
-                                        </div>
-                                    </div>
-                                </Col>
-                                <Col size="6">
-                                    <div className="form-group">
-
-                                        <div className="form-control-wrap">
-                                            <RSelect
-                                                name="category"
-                                                isMulti
-                                                placeholder="İlçe"
-
-                                            />
-
-                                        </div>
-                                    </div>
-                                </Col>
-                                <Col size="6">
-                                    <div className="form-group">
-
-                                        <div className="form-control-wrap">
-                                            <RSelect
-                                                name="category"
-                                                isMulti
+                                                name="ulke"
                                                 placeholder="Ülke"
+                                                options={formattedCountries}
+                                                onChange={(selectedOptions) => handleCountryChange(selectedOptions)}
+                                                value={selectedCountry}
+                                            />
 
+                                        </div>
+                                    </div>
+                                </Col>
+                                <Col size="12">
+                                    <div className="form-group">
+                                        <label className="form-label text-soft">
+
+                                            Şehir
+
+                                        </label>
+
+                                        <div className="form-control-wrap">
+                                            <RSelect
+                                                name="sehir"
+
+                                                placeholder="Şehir"
+                                                options={formattedRegions}
+                                                onChange={(selectedOptions) => handleRegionChange(selectedOptions)}
+                                                value={selectedRegion}
+                                            />
+
+                                        </div>
+                                    </div>
+                                </Col>
+                                <Col size="12">
+                                    <div className="form-group">
+                                        <label className="form-label text-soft">
+
+                                            İlçe
+
+                                        </label>
+
+                                        <div className="form-control-wrap">
+                                            <RSelect
+                                                name="ilce"
+                                                placeholder="İlçe"
+                                                options={formattedCities}
+                                                onChange={(selectedOptions) => handleCityChange(selectedOptions)}
+                                                value={selectedCity}
+                                                isDisabled={selectedRegion ? false : true}
                                             />
 
                                         </div>
