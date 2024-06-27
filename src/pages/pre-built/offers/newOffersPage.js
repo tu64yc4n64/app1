@@ -285,15 +285,23 @@ const NewOffersPage = () => {
     const formattedUsers = formatDataForSelect(users, "username", "id");
 
 
-    const [selectedCategory, setSelectedCategory] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState();
+    console.log(selectedCategory)
     const [selectedTag, setSelectedTag] = useState([]);
     const formattedCategories = formatDataForSelect(categories, "name", "id");
+    console.log(formattedCategories)
     const formattedTags = formatDataForSelect(tags, "name", "id");
     const formattedTaxes = formatDataForSelect(tax, "rate", "multiplier");
     const formattedCustomer = formatDataForSelect(customers.companies || [], "name", "id");
 
     const formattedCustomers = [...formattedPersons, ...formattedCustomer];
     console.log(formattedCustomers)
+    const handleCategoryChange = (selectedOptions) => {
+        setSelectedCategory(selectedOptions);
+    };
+    const handleTagChange = (selectedOptions) => {
+        setSelectedTag(selectedOptions);
+    };
 
 
     const [formData, setFormData] = useState({
@@ -356,7 +364,7 @@ const NewOffersPage = () => {
 
     const onFormSubmit = async (form) => {
         let accessToken = localStorage.getItem('accessToken');
-        const { title, email, phone, address_line, status } = form;
+        const { title, email, phone, address, status } = formData; // formData'dan gerekli verileri alın
 
         // Toplam değeri hesaplayın
         const total = calculateTotal();
@@ -364,19 +372,19 @@ const NewOffersPage = () => {
         // Verilerin doğru formatta olduğundan emin olun
         let submittedData = {
             added_by: formData.added_by,
-            address: address_line,
-            category: { id: 1, name: 'Ürün Teklifleri', description: '', type: 'offer', parent: null },
-            city: "",
+            address: formData.address, // formData'dan alınan adres
+            category: selectedCategory.value,
+            city: formData.city, // formData'dan alınan şehir
             company: "",
-            country: "",
+            country: formData.country, // formData'dan alınan ülke
             created_at: formatDate(new Date()), // Mevcut tarihi formatla
             created_by: formData.added_by,
-            customer: "",
-            customer_name: "",
+            customer: formData.customer, // formData'dan alınan müşteri
+            customer_name: formData.customer_name,
             discount: discountValue,
             discount_type: discountType,
-            district: "",
-            email: email,
+            district: formData.district, // formData'dan alınan ilçe
+            email: formData.email, // formData'dan alınan email
             items: offer.map(item => ({
                 description: item.description,
                 product: item.product,
@@ -387,15 +395,16 @@ const NewOffersPage = () => {
                 unit_price: item.unit_price
             })), // offer state'ini items olarak ekle
             offer_date: formatDate(formData.offer_date), // formData'dan alınan tarihi formatla
-            phone: phone,
-            postal_code: "64000",
+            phone: formData.phone, // formData'dan alınan telefon
+            postal_code: formData.postal_code, // formData'dan alınan posta kodu
             status: formData.status,
-            tags: [],
-            title: formData.title, // Burada doğrudan form.title kullanılıyor
+            tags: selectedTag.map((tag) => tag.value),
+            title: formData.title, // formData'dan alınan başlık
             total: total, // Hesaplanan toplam değeri buraya ekle
             updated_at: formatDate(new Date()), // Mevcut tarihi formatla
             valid_until: formatDate(formData.valid_until), // formData'dan alınan tarihi formatla
         };
+        console.log(submittedData)
 
         try {
             const response = await axios.post(BASE_URL + "offers/", submittedData, {
@@ -420,6 +429,7 @@ const NewOffersPage = () => {
             console.error("Error Config:", error.config);
         }
     };
+
 
 
 
@@ -673,11 +683,11 @@ const NewOffersPage = () => {
 
                                             <div className="form-control-wrap">
                                                 <RSelect
-                                                    isMulti
-                                                    options={formattedCategories}
 
+                                                    options={formattedCategories}
+                                                    value={selectedCategory}
                                                     placeholder="Kategori"
-                                                    onChange={(value) => setFormData({ ...formData, categories: value })}
+                                                    onChange={(selectedOptions) => handleCategoryChange(selectedOptions)}
                                                 />
                                             </div>
                                         </div>
@@ -692,9 +702,9 @@ const NewOffersPage = () => {
                                                 <RSelect
                                                     isMulti
                                                     options={formattedTags}
-
+                                                    value={selectedTag}
                                                     placeholder="Etiket"
-                                                    onChange={(value) => setFormData({ ...formData, tags: value })}
+                                                    onChange={(selectedOptions) => handleTagChange(selectedOptions)}
                                                 />
                                             </div>
                                         </div>
