@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import Content from "../../../layout/content/Content";
-import { Label, Input, Row, Col, UncontrolledDropdown, DropdownToggle, DropdownMenu, ButtonGroup, ButtonToolbar } from "reactstrap";
+import { Input, Row, Col, ButtonGroup, ButtonToolbar } from "reactstrap";
 import DatePicker from "react-datepicker";
 import {
     Block,
-    BlockDes,
+
     BlockHead,
     BlockHeadContent,
     BlockTitle,
@@ -13,7 +13,7 @@ import {
     Button,
     BlockBetween,
     PreviewCard,
-    OverlineTitle,
+
     RSelect
 
 
@@ -33,14 +33,32 @@ const NewOffersPage = () => {
     const [tags, setTags] = useState([]);
     const [data, setData] = useState([]);
     const [tax, setTax] = useState([]);
-    console.log(data)
+    const [customers, setCustomers] = useState([]);
+    console.log(customers)
 
+    const axiosInstance = axios.create();
 
+    axiosInstance.interceptors.response.use(
+        response => response,
+        async error => {
+            if (error.response && error.response.status === 401) {
+                // Token'ı yenile
+                let accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    error.config.headers['Authorization'] = `Bearer ${accessToken}`;
+                    return axios(error.config);
+                } else {
+                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
     const getAllTax = async () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            const response = await axios.get("https://tiosone.com/hub/api/taxrates/", {
+            const response = await axiosInstance.get("https://tiosone.com/hub/api/taxrates/", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -48,26 +66,22 @@ const NewOffersPage = () => {
             });
             setTax(response.data);
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                accessToken = await refreshAccessToken();
-                if (accessToken) {
-                    try {
-                        const response = await axios.get("https://tiosone.com//hub/api/taxrates/", {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${accessToken}`
-                            }
-                        });
-                        setTax(response.data);
-                    } catch (retryError) {
-                        console.error("Retry error after refreshing token", retryError);
-                    }
-                } else {
-                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+    const getAllCustomers = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axiosInstance.get("https://tiosone.com/customers/api/customers/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
                 }
-            } else {
-                console.error("There was an error fetching the data!", error);
-            }
+            });
+            setCustomers(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
         }
     };
 
@@ -75,7 +89,7 @@ const NewOffersPage = () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            const response = await axios.get(BASE_URL + "categories?type=offer", {
+            const response = await axiosInstance.get(BASE_URL + "categories?type=offer", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -83,26 +97,7 @@ const NewOffersPage = () => {
             });
             setCategories(response.data);
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                accessToken = await refreshAccessToken();
-                if (accessToken) {
-                    try {
-                        const response = await axios.get(BASE_URL + "categories?type=offer", {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${accessToken}`
-                            }
-                        });
-                        setCategories(response.data);
-                    } catch (retryError) {
-                        console.error("Retry error after refreshing token", retryError);
-                    }
-                } else {
-                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
-                }
-            } else {
-                console.error("There was an error fetching the data!", error);
-            }
+            console.error("There was an error fetching the data!", error);
         }
     };
 
@@ -110,7 +105,7 @@ const NewOffersPage = () => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
-            const response = await axios.get(BASE_URL + "tags?type=offer", {
+            const response = await axiosInstance.get(BASE_URL + "tags?type=offer", {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -118,31 +113,42 @@ const NewOffersPage = () => {
             });
             setTags(response.data);
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                accessToken = await refreshAccessToken();
-                if (accessToken) {
-                    try {
-                        const response = await axios.get(BASE_URL + "tags?type=offer", {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${accessToken}`
-                            }
-                        });
-                        setTags(response.data);
-                    } catch (retryError) {
-                        console.error("Retry error after refreshing token", retryError);
-                    }
-                } else {
-                    window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
-                }
-            } else {
-                console.error("There was an error fetching the data!", error);
-            }
+            console.error("There was an error fetching the data!", error);
         }
     };
 
 
 
+    const getAllOfferItems = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+        try {
+            const response = await axiosInstance.get(BASE_URL + "offer-items/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setData(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+
+
+    const getAllUSers = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+        try {
+            const response = await axiosInstance.get("https://tiosone.com/users/api/users/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setUsers(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
     const refreshAccessToken = async () => {
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
@@ -171,39 +177,33 @@ const NewOffersPage = () => {
             return null;
         }
     };
+    useEffect(() => {
+        getAllOfferItems();
+        getAllUSers();
+        getAllTax();
+        getAllCustomers()
+        getAllCategories();
+        getAllTags();
+    }, []);
 
-    const getAllOfferItems = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-        try {
-            const response = await axios.get(BASE_URL + "offer-items/", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+    const handleEditChange = (e, id) => {
+        const { name, value } = e.target;
+        setOffer(prevOffer => {
+            const newOffer = prevOffer.map(item =>
+                item.id === id ? { ...item, [name]: value } : item
+            );
+
+            // Calculate the total based on updated quantity, unit_price, and tax
+            return newOffer.map(item => {
+                if (item.id === id) {
+                    const quantity = parseFloat(item.quantity) || 0;
+                    const unit_price = parseFloat(item.unit_price) || 0;
+                    const tax = parseFloat(item.tax) || 0;
+                    item.total = (quantity * unit_price * ((tax + 100) / 100)).toFixed(2);
                 }
+                return item;
             });
-            setData(response.data);
-
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                accessToken = await refreshAccessToken();
-                if (accessToken) {
-                    try {
-                        const response = await axios.get(BASE_URL + "offer-items/", {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${accessToken}`
-                            }
-                        });
-                        setData(response.data);
-
-                    } catch (retryError) {
-                        console.error("Retry error after refreshing token", retryError);
-                    }
-                }
-            } else {
-                console.error("There was an error fetching the data!", error);
-            }
-        }
+        });
     };
 
     const status = [
@@ -242,67 +242,16 @@ const NewOffersPage = () => {
             label: item[labelKey]
         }));
     };
-    const getAllUSers = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-        try {
-            const response = await axios.get("https://tiosone.com/users/api/users/", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setUsers(response.data);
-
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                accessToken = await refreshAccessToken();
-                if (accessToken) {
-                    try {
-                        const response = await axios.get("https://tiosone.com/users/api/users/", {
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${accessToken}`
-                            }
-                        });
-                        setUsers(response.data);
-
-                    } catch (retryError) {
-                        console.error("Retry error after refreshing token", retryError);
-                    }
-                }
-            } else {
-                console.error("There was an error fetching the data!", error);
-            }
-        }
-    };
-    useEffect(() => {
-        getAllOfferItems();
-        getAllUSers();
-        getAllTax();
-
-    }, [])
-
-    const handleEditChange = (e, id) => {
-        const { name, value } = e.target;
-        setOffer(prevOffer => {
-            const newOffer = prevOffer.map(item =>
-                item.id === id ? { ...item, [name]: value } : item
-            );
-
-            // Calculate the total based on updated quantity, unit_price, and tax
-            return newOffer.map(item => {
-                if (item.id === id) {
-                    const quantity = parseFloat(item.quantity) || 0;
-                    const unit_price = parseFloat(item.unit_price) || 0;
-                    const tax = parseFloat(item.tax) || 0;
-                    item.total = (quantity * unit_price * ((tax + 100) / 100)).toFixed(2);
-                }
-                return item;
-            });
-        });
-    };
-
-
+    const formattedPersons = customers?.people?.map(person => ({
+        value: person.id,
+        label: person.first_name + ' ' + person.last_name, // Added space between first and last name
+        address_line: person.address_line,
+        city: person.city,
+        country: person.country,
+        district: person.district,
+        email: person.email,
+        phone: person.phone,
+    })) || []; // Return an empty array if customers.people is undefined
 
     const formattedOfferItems = data.map(item => ({
         value: item.id,
@@ -341,16 +290,12 @@ const NewOffersPage = () => {
     const formattedCategories = formatDataForSelect(categories, "name", "id");
     const formattedTags = formatDataForSelect(tags, "name", "id");
     const formattedTaxes = formatDataForSelect(tax, "rate", "multiplier");
-    console.log(formattedTaxes)
+    const formattedCustomer = formatDataForSelect(customers.companies || [], "name", "id");
 
-    useEffect(() => {
-        getAllCategories()
+    const formattedCustomers = [...formattedPersons, ...formattedCustomer];
+    console.log(formattedCustomers)
 
-    }, [])
-    useEffect(() => {
-        getAllTags()
 
-    }, [])
     const [formData, setFormData] = useState({
         added_by: "",
         address: "",
@@ -378,6 +323,36 @@ const NewOffersPage = () => {
         valid_until: "",
 
     });
+    const handleCustomerChange = (selectedOption) => {
+        if (selectedOption) {
+            const customer = formattedCustomers.find(c => c.value === selectedOption.value);
+            if (customer) {
+                setFormData({
+                    ...formData,
+                    customer: selectedOption.value,
+                    address: customer.address_line,
+                    city: customer.city,
+                    district: customer.district,
+                    country: customer.country,
+                    postal_code: "64000",  // Bu kısmı müşteri verilerinden almak yerine sabit bir değer olarak bıraktım.
+                    email: customer.email,
+                    phone: customer.phone,
+                });
+            }
+        } else {
+            setFormData({
+                ...formData,
+                customer: null,
+                address: "",
+                city: "",
+                district: "",
+                country: "",
+                postal_code: "",
+                email: "",
+                phone: "",
+            });
+        }
+    };
 
     const onFormSubmit = async (form) => {
         let accessToken = localStorage.getItem('accessToken');
@@ -422,7 +397,6 @@ const NewOffersPage = () => {
             valid_until: formatDate(formData.valid_until), // formData'dan alınan tarihi formatla
         };
 
-
         try {
             const response = await axios.post(BASE_URL + "offers/", submittedData, {
                 headers: {
@@ -446,6 +420,7 @@ const NewOffersPage = () => {
             console.error("Error Config:", error.config);
         }
     };
+
 
 
 
@@ -766,12 +741,18 @@ const NewOffersPage = () => {
                                     </Col>
                                     <Col sm="12">
                                         <div className="form-group">
-                                            <label htmlFor="kime" className="form-label text-soft">
+                                            <label htmlFor="status" className="form-label text-soft">
                                                 Kime
                                             </label>
 
                                             <div className="form-control-wrap">
-                                                <Input id="kime" placeholder="Kime" type="text" />
+                                                <RSelect
+                                                    name="status"
+                                                    placeholder="Kime"
+                                                    options={formattedCustomers}
+                                                    onChange={handleCustomerChange}
+                                                    value={formattedCustomers.find(customer => customer.value === formData.customer)}
+                                                />
                                             </div>
                                         </div>
                                     </Col>
@@ -780,7 +761,6 @@ const NewOffersPage = () => {
                                             <label htmlFor="adres" className="form-label text-soft">
                                                 Adres
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <Input
                                                     id="adres"
@@ -798,8 +778,11 @@ const NewOffersPage = () => {
                                             <label className="form-label text-soft">
                                                 Şehir
                                             </label>
-
-                                            <RSelect placeholder="Şehir" />
+                                            <RSelect
+                                                placeholder="Şehir"
+                                                value={{ label: formData.city, value: formData.city }}
+                                                isDisabled
+                                            />
                                         </div>
                                     </Col>
                                     <Col md="6">
@@ -807,8 +790,11 @@ const NewOffersPage = () => {
                                             <label className="form-label text-soft">
                                                 İlçe
                                             </label>
-
-                                            <RSelect placeholder="İlçe" />
+                                            <RSelect
+                                                placeholder="İlçe"
+                                                value={{ label: formData.district, value: formData.district }}
+                                                isDisabled
+                                            />
                                         </div>
                                     </Col>
                                     <Col md="6">
@@ -816,8 +802,11 @@ const NewOffersPage = () => {
                                             <label className="form-label text-soft">
                                                 Ülke
                                             </label>
-
-                                            <RSelect placeholder="Ülke" />
+                                            <RSelect
+                                                placeholder="Ülke"
+                                                value={{ label: formData.country, value: formData.country }}
+                                                isDisabled
+                                            />
                                         </div>
                                     </Col>
                                     <Col md="6">
@@ -825,9 +814,15 @@ const NewOffersPage = () => {
                                             <label htmlFor="posta" className="form-label text-soft">
                                                 Posta Kodu
                                             </label>
-
                                             <div className="form-control-wrap">
-                                                <Input type="text" id="posta" placeholder="Posta Kodu" />
+                                                <Input
+                                                    type="text"
+                                                    id="posta"
+                                                    placeholder="Posta Kodu"
+                                                    value={formData.postal_code}
+                                                    onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                                                    readOnly
+                                                />
                                             </div>
                                         </div>
                                     </Col>
@@ -836,10 +831,10 @@ const NewOffersPage = () => {
                                             <label htmlFor="email" className="form-label text-soft">
                                                 Email
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <Input
                                                     id="email"
+                                                    readOnly
                                                     type="text"
                                                     className="form-control"
                                                     placeholder="Email"
@@ -854,10 +849,10 @@ const NewOffersPage = () => {
                                             <label htmlFor="telefon" className="form-label text-soft">
                                                 Telefon
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <Input
                                                     id="telefon"
+                                                    readOnly
                                                     type="text"
                                                     className="form-control"
                                                     placeholder="Telefon"
@@ -867,6 +862,7 @@ const NewOffersPage = () => {
                                             </div>
                                         </div>
                                     </Col>
+
                                 </Row>
                             </Col>
                             <hr className="preview-hr"></hr>

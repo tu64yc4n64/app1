@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Content from "../../../layout/content/Content";
 import Head from "../../../layout/head/Head";
-import { DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, CardBody, CardTitle } from "reactstrap";
+import { DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, CardBody, CardTitle } from "reactstrap";
 import DatePicker from "react-datepicker";
 import { useForm } from "react-hook-form";
 import AddMeetModal from "./AddMeetModal";
 import EditMeetModal from "./EditMeetModal"; // Yeni bileşeni ekle
 import ContactDetailsModal from './ContactDetailsModal';
+
+
 import {
   Block,
   BlockHead,

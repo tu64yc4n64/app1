@@ -36,7 +36,10 @@ import axios from "axios";
 const BASE_URL = "https://tiosone.com/products/api/"
 
 const ProductList = () => {
-
+  const [tax, setTax] = useState([]);
+  const [data, setData] = useState([]);
+  const [originalData, setOriginalData] = useState([]);
+  console.log(tax)
 
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
@@ -66,6 +69,40 @@ const ProductList = () => {
         console.error("Error refreshing access token", error);
       }
       return null;
+    }
+  };
+  const getAllTax = async () => {
+    let accessToken = localStorage.getItem('accessToken');
+
+    try {
+      const response = await axios.get("https://tiosone.com/hub/api/taxrates/", {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setTax(response.data);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        accessToken = await refreshAccessToken();
+        if (accessToken) {
+          try {
+            const response = await axios.get("https://tiosone.com/hub/api/taxrates/", {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+              }
+            });
+            setTax(response.data);
+          } catch (retryError) {
+            console.error("Retry error after refreshing token", retryError);
+          }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        }
+      } else {
+        console.error("There was an error fetching the data!", error);
+      }
     }
   };
 
@@ -103,7 +140,6 @@ const ProductList = () => {
     }
   };
 
-
   const getAllTags = async () => {
     let accessToken = localStorage.getItem('accessToken');
 
@@ -138,11 +174,6 @@ const ProductList = () => {
       }
     }
   };
-
-  const [data, setData] = useState([]);
-  const [originalData, setOriginalData] = useState([]);
-  console.log(data)
-
 
   const getAllProducts = async () => {
     let accessToken = localStorage.getItem('accessToken');
@@ -184,14 +215,19 @@ const ProductList = () => {
     await getAllProducts();
     await getAllCategories();
     await getAllTags();
+    getAllTax();
   }; // Bu sadece bileşen ilk yüklendiğinde çalışacak
   useEffect(() => {
     getAllData();
 
   }, []); // Bu sadece bileşen ilk yüklendiğinde çalışacak
-
-
-
+  const formatDataForSelect = (data, labelKey, valueKey) => {
+    return data.map(item => ({
+      value: item[valueKey],
+      label: item[labelKey]
+    }));
+  };
+  const formattedTaxes = formatDataForSelect(tax, "rate", "multiplier");
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
@@ -1137,10 +1173,27 @@ const ProductList = () => {
                       <RSelect
                         name="type"
                         placeholder="Türü"
+                        {...register('product_type', {
+                          required: "Lütfen boş bırakılan alanları doldurunuz.",
+                        })}
                         options={product_type}
                         value={selectedProductType}
-                        onChange={(selectedOption) => handleProductTypeChange(selectedOption)} />
+                        onChange={(selectedOption) => handleProductTypeChange(selectedOption)}
+                      />
+                      {errors.product_type && (
+                        <span
+                          style={{
+                            color: '#e85347',
+                            fontSize: '11px',
+                            fontStyle: 'italic'
+                          }}
+                          className="invalid"
+                        >
+                          {errors.product_type.message}
+                        </span>
+                      )}
                     </div>
+
                   </div>
                 </Col>
                 <Col size="6">
@@ -1156,7 +1209,7 @@ const ProductList = () => {
                         id="urun-adi"
                         className="form-control"
                         {...register('name', {
-                          required: "Lütfen boş bıraklın alanları doldurunuz.",
+                          required: "Lütfen boş bırakılan alanları doldurunuz.",
                         })}
                         placeholder="Ürün Adı"
                         value={formData.name}
@@ -1290,6 +1343,7 @@ const ProductList = () => {
                         name="category"
                         isMulti
                         placeholder="KDV Oranı"
+                        options={formattedTaxes}
                       />
                     </div>
                   </div>

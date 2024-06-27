@@ -1,42 +1,40 @@
 import React, { useEffect, useState } from "react";
 import Content from "../../../layout/content/Content";
 import Head from "../../../layout/head/Head";
-import ProductH from "../../../images/avatar/a-sm.jpg"
-import { DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, CardBody, CardTitle } from "reactstrap";
+import { DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, CardBody, CardTitle } from "reactstrap";
+import DatePicker from "react-datepicker";
 import { useForm } from "react-hook-form";
 import AddMeetModal from "./AddMeetModal";
+import EditMeetModal from "./EditMeetModal"; // Yeni bileşeni ekle
+import ContactDetailsModal from './ContactDetailsModal';
+
 import {
-    Button,
-    Col,
     Block,
-    BlockBetween,
-    Row,
     BlockHead,
     BlockHeadContent,
     BlockTitle,
     Icon,
+    Button,
+    Col,
+    BlockBetween,
     DataTableBody,
     DataTableHead,
     DataTableRow,
-    DataTableItem, PaginationComponent,
+    DataTableItem,
+    Row,
+    PaginationComponent,
     RSelect
-
 } from "../../../components/Component";
-
 import { useNavigate, useParams } from "react-router-dom";
-
 import axios from "axios";
 
-const BASE_URL = "https://tiosone.com/customers/api/"
+const BASE_URL = "https://tiosone.com/customers/api/";
 
-
-const CompanyDetailPage = () => {
+const CompanyDetailsPage = () => {
     let { companyId } = useParams();
 
     const refreshAccessToken = async () => {
         const refreshToken = localStorage.getItem('refreshToken');
-
-
         if (!refreshToken) {
             console.error('No refresh token found in local storage.');
             return null;
@@ -63,9 +61,9 @@ const CompanyDetailPage = () => {
             return null;
         }
     };
+
     const getCompany = async () => {
         let accessToken = localStorage.getItem('accessToken');
-
 
         try {
             const response = await axios.get(BASE_URL + `companies/${companyId}`, {
@@ -77,19 +75,16 @@ const CompanyDetailPage = () => {
             setData(response.data);
         } catch (error) {
             if (error.response && error.response.status === 401) {
-
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
-
                     try {
-                        const response = await axios.get(BASE_URL + "persons/", {
+                        const response = await axios.get(BASE_URL + `companies/${companyId}`, {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${accessToken}`
                             }
                         });
                         setData(response.data);
-
                     } catch (retryError) {
                         console.error("Retry error after refreshing token", retryError);
                     }
@@ -99,9 +94,9 @@ const CompanyDetailPage = () => {
             }
         }
     };
+
     const getCompanyContactHistory = async () => {
         let accessToken = localStorage.getItem('accessToken');
-
 
         try {
             const response = await axios.get(BASE_URL + `contact_histories?company=${companyId}`, {
@@ -114,10 +109,8 @@ const CompanyDetailPage = () => {
             setOriginalContactHistory(response.data);
         } catch (error) {
             if (error.response && error.response.status === 401) {
-
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
-
                     try {
                         const response = await axios.get(BASE_URL + `contact_histories?company=${companyId}`, {
                             headers: {
@@ -127,7 +120,6 @@ const CompanyDetailPage = () => {
                         });
                         setConversation(response.data);
                         setOriginalContactHistory(response.data);
-
                     } catch (retryError) {
                         console.error("Retry error after refreshing token", retryError);
                     }
@@ -137,23 +129,106 @@ const CompanyDetailPage = () => {
             }
         }
     };
+
+    const contactType = [
+        { value: "phone", label: "Telefon" },
+        { value: "email", label: "Email" },
+        { value: "face", label: "Yüz Yüze" },
+        { value: "social_media", label: "Sosyal Medya" },
+        { value: "other", label: "Diğer" },
+    ];
+
     useEffect(() => {
-        getCompany()
-        getCompanyContactHistory()
+        getCompany();
+        getCompanyContactHistory();
+    }, [companyId]);
 
-    }, [companyId])
+    const getAllUsers = async () => {
+        let accessToken = localStorage.getItem('accessToken');
 
-    const [conversation, setConversation] = useState([]);
+        try {
+            const response = await axios.get("https://tiosone.com/users/api/users/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setUser(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    try {
+                        const response = await axios.get("https://tiosone.com/users/api/users/", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        setUser(response.data);
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
+                }
+            } else {
+                console.error("There was an error fetching the data!", error);
+            }
+        }
+    };
+
+    const getAllTags = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axios.get(BASE_URL + "tags?type=company", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setTags(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    try {
+                        const response = await axios.get(BASE_URL + "tags?type=company", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        setTags(response.data);
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
+                } else {
+                    window.location.href = '/auth-login';
+                }
+            } else {
+                console.error("There was an error fetching the data!", error);
+            }
+        }
+    };
+
+    useEffect(() => {
+        getAllUsers();
+        getAllTags();
+    }, []);
+
+    const [data, setData] = useState([]);
+    const [user, setUser] = useState([]);
+    const [tags, setTags] = useState([]);
     const [originalContactHistory, setOriginalContactHistory] = useState([]);
-    const currentItems = conversation
-    const [data, setData] = useState();
-    console.log(originalContactHistory)
+    const [conversation, setConversation] = useState([]);
+    const currentItems = conversation;
+    console.log(conversation);
 
     const [sideBar, setSidebar] = useState(false);
     const [itemPerPage, setItemPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [company, setCompany] = useState();
-
+    console.log(company);
 
     const [modal, setModal] = useState({
         edit: false,
@@ -164,9 +239,7 @@ const CompanyDetailPage = () => {
         date: "",
         type: "",
         notice: 0,
-
     });
-
     const [editId, setEditedId] = useState();
     const [view, setView] = useState({
         edit: false,
@@ -175,75 +248,30 @@ const CompanyDetailPage = () => {
     });
     const resetForm = () => {
         setFormData({
-            name: "",
-            email: "",
-            balance: 0,
-            phone: "",
-            status: "Active",
+            date: "",
+            contact_type: "",
+            content: "",
         });
     };
     const closeModal = () => {
-        setModal({ add: false })
+        setModal({ add: false, edit: false });
         resetForm();
-    };
-
-    const onEditSubmit = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-
-        let submittedData;
-        let newItems = conversation;
-        let index = newItems.findIndex((item) => item.id === editId);
-
-        newItems.forEach((item) => {
-            if (item.id === editId) {
-                submittedData = {
-                    date: formData.date,
-                    contact_type: formData.contact_type.label,
-                    content: formData.content,
-                };
-            }
-        });
-
-        console.log(submittedData)
-
-        try {
-            const response = await axios.put(`${BASE_URL}contact_histories/${editId}`, submittedData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-
-            // Veritabanı güncelleme başarılı olursa yerel veriyi güncelle
-            newItems[index] = response.data;
-            setConversation(newItems);
-            setOriginalContactHistory(newItems);
-            resetForm();
-            setView({ edit: false, add: false });
-        } catch (error) {
-            console.error('Veritabanını güncelleme sırasında hata oluştu:', error);
-        }
     };
 
     const onEditClick = (id) => {
         conversation.forEach((item) => {
             if (item.id === id) {
-
                 setFormData({
                     date: item.date,
                     contact_type: item.contact_type,
                     content: item.content,
-
                 });
             }
-
         });
         setEditedId(id);
-
         setView({ add: false, edit: true });
     };
 
-    // grabs the id of the url and loads the corresponding data
     useEffect(() => {
         const id = companyId;
         if (id !== undefined || null || "") {
@@ -254,16 +282,15 @@ const CompanyDetailPage = () => {
         }
     }, [data]);
 
-
     useEffect(() => {
         sideBar ? document.body.classList.add("toggle-shown") : document.body.classList.remove("toggle-shown");
-    }, [sideBar])
+    }, [sideBar]);
 
     const [onSearchText, setSearchText] = useState("");
     useEffect(() => {
         if (onSearchText !== "") {
             const filteredObject = conversation.filter((item) => {
-                return item.date.toLowerCase().includes(onSearchText.toLowerCase());
+                return item.content.toLowerCase().includes(onSearchText.toLowerCase());
             });
             setConversation([...filteredObject]);
         } else {
@@ -271,7 +298,11 @@ const CompanyDetailPage = () => {
         }
     }, [onSearchText]);
 
-    const deleteProduct = async (id) => {
+    const onFilterChange = (e) => {
+        setSearchText(e.target.value);
+    };
+
+    const deleteContactHistory = async (id) => {
         let accessToken = localStorage.getItem('accessToken');
 
         try {
@@ -282,8 +313,8 @@ const CompanyDetailPage = () => {
                 }
             });
             let updatedData = conversation.filter((item) => item.id !== id);
-            setConversation(...updatedData);
-            setOriginalContactHistory(...updatedData);
+            setConversation(updatedData);
+            setOriginalContactHistory(updatedData);
         } catch (error) {
             console.error("There was an error deleting the product!", error);
         }
@@ -292,9 +323,6 @@ const CompanyDetailPage = () => {
     const onFormCancel = () => {
         setView({ edit: false, add: false, details: false });
         resetForm();
-    };
-    const onFilterChange = (e) => {
-        setSearchText(e.target.value);
     };
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -305,57 +333,13 @@ const CompanyDetailPage = () => {
             add: type === "add" ? true : false,
             details: type === "details" ? true : false,
         });
-        setonSearch(!onSearch)
+        setonSearch(!onSearch);
     };
 
-    if (company && company.created_at && company.updated_at) {
-        const createdDate = company.created_at;
-        const updatedDate = company.updated_at;
-
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0'); // Aylar 0'dan başlar, bu yüzden +1 ekliyoruz
-            const year = date.getFullYear();
-            return `${day}.${month}.${year}`;
-        }
-
-        const formattedCreatedDate = formatDate(createdDate);
-        const formattedUpdatedDate = formatDate(updatedDate);
-
-        console.log('Formatted Created Date:', formattedCreatedDate);
-        console.log('Formatted Updated Date:', formattedUpdatedDate);
-    } else {
-        console.error("User nesnesi veya created_at/updated_at özellikleri tanımlı değil.");
-    }
-
-    const contact_type = [
-        {
-            value: "Email",
-            label: "email"
-        },
-        {
-            value: "Phone",
-            label: "phone"
-        },
-        {
-            value: "Meeting",
-            label: "meeting"
-        },
-        {
-            value: "Face To Face",
-            label: "face"
-        },
-        {
-            value: "Social Media",
-            label: "social_media"
-        },
-        {
-            value: "Other",
-            label: "other"
-        },
-
-    ]
+    const addContactHistory = (newContact) => {
+        setConversation(prevConversation => [newContact, ...prevConversation]);
+        setOriginalContactHistory(prevOriginalContactHistory => [newContact, ...prevOriginalContactHistory]);
+    };
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -369,10 +353,8 @@ const CompanyDetailPage = () => {
                             <BlockHeadContent>
                                 <BlockTitle tag="h3" page>
                                     Firmalar / <strong className=" small">{company.name}</strong>
-
                                 </BlockTitle>
                                 <span className="badge bg-outline-secondary">{company.category}</span>
-
                             </BlockHeadContent>
                             <BlockHeadContent>
                                 <Button
@@ -397,20 +379,14 @@ const CompanyDetailPage = () => {
                             </BlockHeadContent>
                         </BlockBetween>
                     </BlockHead>
-
-
                     <Block>
-
                         <div>
-
                             <div id="user-detail-block">
                                 <div className="row">
-
                                     <div className="col-md-4">
                                         <div className="card-bordered card" >
                                             <CardBody className="card-inner">
                                                 <CardTitle tag="h6">Firma Bilgileri</CardTitle>
-
                                                 <div>
                                                     <ul className="user-detail-info-list">
                                                         <li>
@@ -423,18 +399,33 @@ const CompanyDetailPage = () => {
                                                         </li>
                                                         <li>
                                                             <Icon name="user-fill"></Icon>
+                                                            {company.customer_representatives && company.customer_representatives.length > 0 && company.customer_representatives.map((representativeId, index) => {
+                                                                const representative = user.find(u => u.id === representativeId);
+                                                                return representative ? (
+                                                                    <strong key={index} className="ps-3">
+                                                                        {representative.username}
+                                                                    </strong>
+                                                                ) : null;
+                                                            })}
                                                         </li>
                                                         <li>
                                                             <Icon name="ticket-fill"></Icon>
-
+                                                            {company.tags && company.tags.length > 0 && company.tags.map((tagId, index) => {
+                                                                const tag = tags.find(per => per.id === tagId);
+                                                                return tag ? (
+                                                                    <strong key={index} className="badge bg-outline-secondary ms-3">
+                                                                        {tag.name}
+                                                                    </strong>
+                                                                ) : null;
+                                                            })}
                                                         </li>
                                                         <li>
                                                             <Icon name="calender-date-fill"></Icon>
-                                                            <strong className="ps-3"> tarihinde oluşturuldu.</strong>
+                                                            <strong className="ps-3">{company.created_at} tarihinde oluşturuldu.</strong>
                                                         </li>
                                                         <li>
                                                             <Icon name="calender-date-fill"></Icon>
-                                                            <strong className="ps-3"> tarihinde düzenlendi.</strong>
+                                                            <strong className="ps-3">{company.updated_at} tarihinde düzenlendi.</strong>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -445,7 +436,7 @@ const CompanyDetailPage = () => {
                                                 <CardTitle tag="h6">Adres</CardTitle>
                                                 <div className="d-flex">
                                                     <Icon style={{ position: "relative", top: "4px" }} name="map-pin-fill"></Icon>
-                                                    <span>{company.address_line}</span>
+                                                    {company.address_line ? <span>{company.address_line}</span> : <span>Adres Bilgisi Girilmemiş</span>}
                                                 </div>
                                             </CardBody>
                                         </div>
@@ -514,9 +505,7 @@ const CompanyDetailPage = () => {
                                                         <span>Hatırlatıcılar</span>
                                                     </a>
                                                 </li>
-
                                             </ul>
-
                                             <div className="card-inner">
                                                 <BlockHeadContent>
                                                     <div className="toggle-wrap nk-block-tools-toggle">
@@ -546,7 +535,6 @@ const CompanyDetailPage = () => {
                                                                         </DropdownToggle>
                                                                         <DropdownMenu>
                                                                             <ul className="link-list-opt no-bdr">
-
                                                                             </ul>
                                                                         </DropdownMenu>
                                                                     </UncontrolledDropdown>
@@ -561,12 +549,10 @@ const CompanyDetailPage = () => {
                                                                         </DropdownToggle>
                                                                         <DropdownMenu>
                                                                             <ul className="link-list-opt no-bdr">
-
                                                                             </ul>
                                                                         </DropdownMenu>
                                                                     </UncontrolledDropdown>
                                                                 </li>
-
                                                             </ul>
                                                             <div className="nk-block-tools-opt d-md-block d-flex justify-content-end">
                                                                 <Button
@@ -590,16 +576,13 @@ const CompanyDetailPage = () => {
                                                     </div>
                                                 </BlockHeadContent>
                                                 <DataTableBody>
-
                                                     <DataTableHead>
-
                                                         <DataTableRow className="nk-tb-col-check">
                                                             <div className="custom-control custom-control-sm custom-checkbox notext">
                                                                 <input
                                                                     type="checkbox"
                                                                     className="custom-control-input"
                                                                     id="uid_1"
-
                                                                 />
                                                                 <label className="custom-control-label" htmlFor="uid_1"></label>
                                                             </div>
@@ -616,8 +599,6 @@ const CompanyDetailPage = () => {
                                                         <DataTableRow size="md">
                                                             <span>Temsilci</span>
                                                         </DataTableRow>
-
-
                                                         <DataTableRow className="nk-tb-col-tools">
                                                             <ul className="nk-tb-actions gx-1 my-n1">
                                                                 <li className="me-n1">
@@ -642,7 +623,6 @@ const CompanyDetailPage = () => {
                                                                                     <DropdownItem
                                                                                         tag="a"
                                                                                         href="#remove"
-
                                                                                     >
                                                                                         <Icon name="trash"></Icon>
                                                                                         <span>Remove Selected</span>
@@ -667,8 +647,8 @@ const CompanyDetailPage = () => {
                                                             </ul>
                                                         </DataTableRow>
                                                     </DataTableHead>
-                                                    {conversation.length > 0
-                                                        ? conversation.map((item) => {
+                                                    {currentItems.length > 0
+                                                        ? currentItems.map((item) => {
                                                             return (
                                                                 <DataTableItem key={item.id}>
                                                                     <DataTableRow className="nk-tb-col-check">
@@ -679,30 +659,26 @@ const CompanyDetailPage = () => {
                                                                                 defaultChecked={item.check}
                                                                                 id={item.id + "uid1"}
                                                                                 key={Math.random()}
-
                                                                             />
                                                                             <label className="custom-control-label" htmlFor={item.id + "uid1"}></label>
                                                                         </div>
                                                                     </DataTableRow>
                                                                     <DataTableRow>
-
-                                                                        <span className="tb-product" style={{ flexDirection: "column", display: "flex", alignItems: "start" }}>
-
-                                                                            <span className="title">{item.date}</span>
-
-                                                                        </span>
-
+                                                                        <span className="tb-sub">{item.date}</span>
                                                                     </DataTableRow>
-
                                                                     <DataTableRow size="md">
-                                                                        <span className="badge bg-outline-secondary">{item.contact_type}</span>
+                                                                        {item.contact_type && (
+                                                                            <span className="badge bg-outline-secondary me-1">
+                                                                                {contactType.find(cat => cat.value === item.contact_type)?.label}
+                                                                            </span>
+                                                                        )}
                                                                     </DataTableRow>
+
                                                                     <DataTableRow>
                                                                         <span className="tb-sub">{item.content}</span>
                                                                     </DataTableRow>
                                                                     <DataTableRow size="md">
-                                                                        <img style={{ borderRadius: "50%", width: "25px" }} src={ProductH} alt="product" className="thumb" />
-                                                                        <span style={{ paddingLeft: "5px" }} className="tb-sub"></span>
+                                                                        <span style={{ paddingLeft: "5px" }} className="tb-sub">{item.added_by}</span>
                                                                     </DataTableRow>
                                                                     <DataTableRow className="nk-tb-col-tools">
                                                                         <ul className="nk-tb-actions gx-1 my-n1">
@@ -752,7 +728,7 @@ const CompanyDetailPage = () => {
                                                                                                     href="#remove"
                                                                                                     onClick={(ev) => {
                                                                                                         ev.preventDefault();
-                                                                                                        deleteProduct(item.id);
+                                                                                                        deleteContactHistory(item.id);
                                                                                                     }}
                                                                                                 >
                                                                                                     <Icon name="trash"></Icon>
@@ -786,145 +762,35 @@ const CompanyDetailPage = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                     </div>
-
-
-
-
                                 </div>
                             </div>
                         </div>
-
-                    </Block >
-
-
-                    <Modal isOpen={view.edit} toggle={() => onFormCancel()} className="modal-dialog-centered" size="lg">
-                        <ModalBody>
-                            <a href="#cancel" className="close">
-                                {" "}
-                                <Icon
-                                    name="cross-sm"
-                                    onClick={(ev) => {
-                                        ev.preventDefault();
-                                        onFormCancel();
-                                    }}
-                                ></Icon>
-                            </a>
-                            <div className="p-2">
-                                <h5 className="title">Görüşmeyi Düzenle</h5>
-                                <div className="mt-4">
-                                    <form noValidate onSubmit={handleSubmit(onEditSubmit)}>
-                                        <Row className="g-3">
-                                            <Col lg="4">
-                                                <div className="form-group">
-                                                    <label className="form-label" htmlFor="firstName">
-                                                        Tarih
-                                                    </label>
-                                                    <div className="form-control-wrap">
-
-                                                        <input
-                                                            id="firstName"
-                                                            type="text"
-                                                            className="form-control"
-
-                                                            value={formData.date}
-                                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
-
-                                                    </div>
-                                                </div>
-                                            </Col>
-                                            <Col lg="4">
-                                                <div className="form-group">
-                                                    <label className="form-label" htmlFor="lastName">
-                                                        Görüşme Türü
-                                                    </label>
-                                                    <div className="form-control-wrap">
-
-                                                        <RSelect
-                                                            options={contact_type}
-                                                            value={formData.contact_type}
-                                                            placeholder={formData.contact_type}
-                                                            onChange={(value) => setFormData({ ...formData, contact_type: value })}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </Col>
-                                            <Col lg="4">
-                                                <div className="form-group">
-                                                    <label className="form-label" htmlFor="sirket">
-                                                        Notlar
-                                                    </label>
-                                                    <div className="form-control-wrap">
-                                                        <input
-                                                            id="sirket"
-                                                            type="text"
-                                                            className="form-control"
-
-                                                            value={formData.content}
-                                                            onChange={(e) => setFormData({ ...formData, content: e.target.value })} />
-
-                                                    </div>
-                                                </div>
-                                            </Col>
-                                            <Col size="12">
-                                                <Button color="primary" type="submit">
-
-                                                    <span>Görüşmeyi Güncelle</span>
-                                                </Button>
-                                            </Col>
-                                        </Row>
-                                    </form>
-                                </div>
-                            </div>
-                        </ModalBody>
-                    </Modal>
-                    <Modal isOpen={view.details} toggle={() => onFormCancel()} className="modal-dialog-centered" size="lg">
-                        <ModalBody>
-                            <a href="#cancel" className="close">
-                                {" "}
-                                <Icon
-                                    name="cross-sm"
-                                    onClick={(ev) => {
-                                        ev.preventDefault();
-                                        onFormCancel();
-                                    }}
-                                ></Icon>
-                            </a>
-                            <div className="nk-modal-head">
-                                <h4 className="nk-modal-title title">
-                                    Görüşme Bilgileri <small className="text-primary"></small>
-                                </h4>
-
-                            </div>
-                            <div className="nk-tnx-details mt-sm-3">
-                                <Row className="gy-3">
-                                    <Col lg={4}>
-                                        <span className="sub-text">Tarih</span>
-                                        <span className="caption-text">{formData.date}</span>
-                                    </Col>
-                                    <Col lg={4}>
-                                        <span className="sub-text">Görüşme Türü</span>
-                                        <span className="caption-text">{formData.contact_type}</span>
-                                    </Col>
-                                    <Col lg={4}>
-                                        <span className="sub-text">Notlar</span>
-                                        <span className="caption-text">{formData.content}</span>
-                                    </Col>
-
-
-
-                                </Row>
-                            </div>
-                        </ModalBody>
-                    </Modal>
-
-                    {view.add && <div className="toggle-overlay" onClick={toggle}></div>}
-                    <AddMeetModal modal={modal.add} closeModal={closeModal} />
-                </Content >
-
+                    </Block>
+                    <ContactDetailsModal
+                        view={view}
+                        onFormCancel={onFormCancel}
+                        formData={formData}
+                    />
+                    <EditMeetModal
+                        modal={view.edit}
+                        closeModal={onFormCancel}
+                        editId={editId}
+                        formData={formData}
+                        setFormData={setFormData}
+                        conversation={conversation}
+                        setConversation={setConversation}
+                        setOriginalContactHistory={setOriginalContactHistory}
+                    />
+                    <AddMeetModal
+                        modal={modal.add}
+                        closeModal={() => setModal({ ...modal, add: false })}
+                        onSubmit={addContactHistory}
+                        companyId={companyId}
+                    />
+                </Content>
             )}
         </>
     );
 };
-export default CompanyDetailPage;
+export default CompanyDetailsPage;

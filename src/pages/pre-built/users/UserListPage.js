@@ -760,7 +760,7 @@ const UserListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('username', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Kullanıcı Adı"
                                                 value={formData.username}
@@ -781,7 +781,7 @@ const UserListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('email', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Eposta Adresi"
                                                 value={formData.email}
@@ -808,7 +808,7 @@ const UserListPage = () => {
                                                 type="password"
                                                 className="form-control"
                                                 {...register('password', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Parola"
                                                 value={formData.password}

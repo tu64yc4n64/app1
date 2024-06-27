@@ -576,7 +576,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Soyadı"
                                                 value={formData.name}
@@ -593,7 +593,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Ünvan"
                                                 value={formData.name}
@@ -628,7 +628,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Email"
                                                 value={formData.name}
@@ -645,7 +645,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Telefon No 1"
                                                 value={formData.name}
@@ -662,7 +662,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Telefon No 2"
                                                 value={formData.name}
@@ -746,7 +746,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Notlar"
                                                 value={formData.name}
@@ -766,7 +766,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Adres"
                                                 value={formData.name}
@@ -826,7 +826,7 @@ const SalesListPage = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Posta Kodu"
 

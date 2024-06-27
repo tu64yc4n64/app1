@@ -1,4 +1,4 @@
-import React, { useEffect, useState, forwardRef } from "react";
+import React, { useState, forwardRef, useEffect } from "react";
 import { Modal, ModalBody, Form } from "reactstrap";
 import DatePicker from "react-datepicker";
 import { Icon, Col, Button, RSelect as OriginalRSelect } from "../../../components/Component";
@@ -11,7 +11,7 @@ const BASE_URL = "https://tiosone.com/customers/api/";
 
 const RSelect = forwardRef((props, ref) => <OriginalRSelect innerRef={ref} {...props} />);
 
-const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
+const EditMeetModal = ({ modal, closeModal, editId, formData, setFormData, conversation, setConversation, setOriginalContactHistory }) => {
     const contactType = [
         { value: "phone", label: "Telefon" },
         { value: "email", label: "Email" },
@@ -20,12 +20,25 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
         { value: "other", label: "Diğer" },
     ];
 
-    const { register, handleSubmit, reset, control, formState: { errors } } = useForm();
+    const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm();
     const [startDate, setStartDate] = useState(null);
 
     useEffect(() => {
-        reset();
-    }, [modal, reset]);
+        if (formData.date) {
+            const dateParts = formData.date.split(" ");
+            const [day, month, year] = dateParts[0].split("/").map(Number);
+            const [hours, minutes, seconds] = dateParts[1].split(":").map(Number);
+            const formattedDate = new Date(year, month - 1, day, hours, minutes, seconds);
+            setStartDate(formattedDate);
+        }
+
+        // Formun varsayılan değerlerini ayarla
+        reset({
+            date: formData.date,
+            contact_type: contactType.find(option => option.value === formData.contact_type),
+            content: formData.content
+        });
+    }, [modal, formData, reset]);
 
     const refreshAccessToken = async () => {
         const refreshToken = localStorage.getItem('refreshToken');
@@ -78,13 +91,12 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
             date: startDate ? formatDate(startDate, currentTime) : null,
             contact_type: contact_type.value,
             content: content,
-            company: companyId,
         };
 
         console.log("Submitted Data:", submittedData);
 
         try {
-            const response = await axios.post(BASE_URL + `contact_histories/`, submittedData, {
+            const response = await axios.put(BASE_URL + `contact_histories/${editId}`, submittedData, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -92,9 +104,14 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
             });
 
             console.log("API Response:", response.data);
+            let newItems = conversation;
+            let index = newItems.findIndex((item) => item.id === editId);
+            newItems[index] = response.data;
+            setConversation(newItems);
+            setOriginalContactHistory(newItems);
             resetForm();
             closeModal();
-            toast.success("Görüşme Kaydı Başarıyla Eklendi", {
+            toast.success("Görüşme Kaydı Başarıyla Güncellendi", {
                 position: "top-right",
                 autoClose: 2000,
                 hideProgressBar: true,
@@ -103,24 +120,26 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
                 draggable: true,
                 progress: false,
             });
-
-            // Yeni veriyi ana componente geri gönder
-            onSubmit(response.data);
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 accessToken = await refreshAccessToken();
                 if (accessToken) {
                     try {
-                        const response = await axios.post(BASE_URL + `contact_histories/`, submittedData, {
+                        const response = await axios.put(BASE_URL + `contact_histories/${editId}`, submittedData, {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${accessToken}`
                             }
                         });
                         console.log("API Response:", response.data);
+                        let newItems = conversation;
+                        let index = newItems.findIndex((item) => item.id === editId);
+                        newItems[index] = response.data;
+                        setConversation(newItems);
+                        setOriginalContactHistory(newItems);
                         resetForm();
                         closeModal();
-                        toast.success("Görüşme Kaydı Başarıyla Eklendi", {
+                        toast.success("Görüşme Kaydı Başarıyla Güncellendi", {
                             position: "top-right",
                             autoClose: 2000,
                             hideProgressBar: true,
@@ -129,9 +148,6 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
                             draggable: true,
                             progress: false,
                         });
-
-                        // Yeni veriyi ana componente geri gönder
-                        onSubmit(response.data);
                     } catch (retryError) {
                         console.error("Retry error after refreshing token", retryError);
                     }
@@ -142,7 +158,7 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
                 console.error("Response Error:", error.response.data);
                 console.error("Response Status:", error.response.status);
                 console.error("Response Headers:", error.response.headers);
-                toast.error("Görüşme Kaydı Eklenirken Bir Hata Oluştu.", {
+                toast.error("Görüşme Kaydı Güncellenirken Bir Hata Oluştu.", {
                     position: "top-right",
                     autoClose: 2000,
                     hideProgressBar: true,
@@ -154,8 +170,6 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
             }
         }
     };
-
-
 
     const resetForm = () => {
         setStartDate(null);
@@ -176,7 +190,7 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
                     <Icon name="cross-sm"></Icon>
                 </a>
                 <div className="p-2">
-                    <h5 className="title">Görüşme Kaydı Ekle</h5>
+                    <h5 className="title">Görüşme Kaydını Düzenle</h5>
                     <div className="mt-4">
                         <Form className="row gy-4" noValidate onSubmit={handleSubmit(handleFormSubmit)}>
                             <Col md="6">
@@ -193,6 +207,8 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
                                                     selected={startDate}
                                                     onChange={(date) => {
                                                         setStartDate(date);
+                                                        setValue("date", date); // setValue kullanarak form değeri güncelleyin
+                                                        setFormData({ ...formData, date: formatDate(date, new Date()) }); // formData güncelleyin
                                                         field.onChange(date);
                                                     }}
                                                     className="form-control"
@@ -220,6 +236,12 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
                                                     {...field}
                                                     options={contactType}
                                                     placeholder="Görüşme Türü"
+                                                    value={contactType.find(option => option.value === formData.contact_type)} // value ile formData'dan güncel değeri alın
+                                                    onChange={(selectedOption) => {
+                                                        setFormData({ ...formData, contact_type: selectedOption.value });
+                                                        setValue("contact_type", selectedOption); // setValue kullanarak form değeri güncelleyin
+                                                        field.onChange(selectedOption);
+                                                    }}
                                                 />
                                             )}
                                             rules={{ required: "Görüşme türü gereklidir." }}
@@ -237,6 +259,11 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
                                         {...register("content", { required: "Görüşme notları gereklidir." })}
                                         className="form-control"
                                         placeholder="Görüşme Notları..."
+                                        value={formData.content} // value kullanarak formData'dan güncel değeri alın
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, content: e.target.value });
+                                            setValue("content", e.target.value); // setValue kullanarak form değeri güncelleyin
+                                        }}
                                     />
                                     {errors.content && <span className="text-danger">{errors.content.message}</span>}
                                 </div>
@@ -270,4 +297,4 @@ const AddMeetModal = ({ modal, closeModal, companyId, onSubmit }) => {
     );
 };
 
-export default AddMeetModal;
+export default EditMeetModal;

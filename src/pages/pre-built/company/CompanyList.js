@@ -1541,7 +1541,7 @@ const CompanyList = () => {
                                                 type="text"
                                                 className="form-control"
                                                 {...register('name', {
-                                                    required: "Lütfen boş bıraklın alanları doldurunuz.",
+                                                    required: "Lütfen boş bırakılan alanları doldurunuz.",
                                                 })}
                                                 placeholder="Şirket Adı"
                                                 value={formData.name}
