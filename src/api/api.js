@@ -1,59 +1,48 @@
+// src/utils/api.js
 import axios from 'axios';
 
+const baseURL = 'https://tiosone.com';
+
 const api = axios.create({
+    baseURL,
     headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
     },
 });
 
-// Token yenileme fonksiyonu
 const refreshAccessToken = async () => {
     try {
         const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post('https://api.example.com/auth/refresh', { token: refreshToken });
-        const { access } = response.data;
-
-        localStorage.setItem('accessToken', access);
-        api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
-
-        return access;
+        const response = await axios.post(`${baseURL}/refresh`, { token: refreshToken });
+        const { accessToken } = response.data;
+        localStorage.setItem('accessToken', accessToken);
+        return accessToken;
     } catch (error) {
-        console.error('Token yenileme hatası:', error);
-        return null;
+        console.error('Failed to refresh access token:', error);
+        throw error;
     }
 };
 
-// Axios interceptor ekle
-api.interceptors.response.use(
-    response => response,
-    async error => {
-        const originalRequest = error.config;
-
-        if (error.response.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-
-            const newAccessToken = await refreshAccessToken();
-            if (newAccessToken) {
-                originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-                return api(originalRequest);
-            } else {
-                // Token yenilenemezse, kullanıcıyı logout et
-                window.location.href = '/auth-login';
+const fetchData = async (url) => {
+    try {
+        const response = await api.get(url);
+        return response.data;
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            try {
+                const newAccessToken = await refreshAccessToken();
+                api.defaults.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                const retryResponse = await api.get(url);
+                return retryResponse.data;
+            } catch (retryError) {
+                console.error('Failed to retry with new access token:', retryError);
+                throw retryError;
             }
+        } else {
+            throw error;
         }
-        return Promise.reject(error);
     }
-);
+};
 
-api.interceptors.request.use(
-    async config => {
-        const accessToken = localStorage.getItem('accessToken');
-        if (accessToken) {
-            config.headers['Authorization'] = `Bearer ${accessToken}`;
-        }
-        return config;
-    },
-    error => Promise.reject(error)
-);
-
-export default api;
+export { fetchData };

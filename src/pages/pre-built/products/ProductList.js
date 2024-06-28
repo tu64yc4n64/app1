@@ -9,6 +9,7 @@ import { RSelect } from "../../../components/Component";
 
 import { Card, DropdownItem, UncontrolledDropdown, DropdownMenu, DropdownToggle, Modal, ModalBody, Input } from "reactstrap";
 import { NumericFormat } from 'react-number-format';
+import { ToastContainer, toast } from 'react-toastify';
 
 import {
   Block,
@@ -39,7 +40,7 @@ const ProductList = () => {
   const [tax, setTax] = useState([]);
   const [data, setData] = useState([]);
   const [originalData, setOriginalData] = useState([]);
-  console.log(data)
+
 
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
@@ -177,15 +178,47 @@ const ProductList = () => {
 
   const getAllProducts = async () => {
     let accessToken = localStorage.getItem('accessToken');
+
     try {
-      const response = await axios.get(BASE_URL + "products/", {
+      let url = "products/";
+      let query = [];
+
+      if (selectedFiltreCategory && selectedFiltreCategory.length > 0) {
+        const categories = selectedFiltreCategory.map(item => item.label).join(',');
+        query.push(`category=${categories}`);
+      }
+
+      if (selectedFiltreTag && selectedFiltreTag.length > 0) {
+        const tags = selectedFiltreTag.map(item => item.label).join(',');
+        query.push(`tags=${tags}`);
+      }
+
+      if (query.length > 0) {
+        url += '?' + query.join('&');
+      }
+
+      const response = await axios.get(BASE_URL + url, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         }
       });
+
+      if (response.data.length === 0) {
+        toast.warning("Herhangi bir müşteri bulunamadı", {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: false,
+        });
+      }
+
       setData(response.data);
       setOriginalData(response.data);
+
     } catch (error) {
       if (error.response && error.response.status === 401) {
         accessToken = await refreshAccessToken();
@@ -202,14 +235,27 @@ const ProductList = () => {
           } catch (retryError) {
             console.error("Retry error after refreshing token", retryError);
           }
+        } else {
+          window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
         }
       } else {
-        console.error("There was an error fetching the data!", error);
+        if (error.response) {
+          // Sunucudan bir yanıt alındı ve 2xx aralığında değil
+          console.error("Response Error Data:", error.response.data);
+          console.error("Response Status:", error.response.status);
+          console.error("Response Headers:", error.response.headers);
+        } else if (error.request) {
+          // İstek yapıldı, ancak herhangi bir yanıt alınmadı
+          console.error("Request Error:", error.request);
+        } else {
+          // İstek yapılandırırken bir şeyler ters gitti
+          console.error('Error', error.message);
+        }
+        console.error("Config:", error.config);
       }
     }
   };
 
-  // Diğer benzer fonksiyonlar için de gereksiz console.log kullanımlarını kaldırın.
 
   const getAllData = async () => {
     await getAllProducts();
@@ -227,14 +273,29 @@ const ProductList = () => {
       label: item[labelKey]
     }));
   };
-  const formattedTaxes = formatDataForSelect(tax, "rate", "multiplier");
+  const formattedTaxes = tax.map(item => ({
+    value: item.rate,
+    label: item.rate,
+    id: item.id
+  }))
+
   const [categories, setCategories] = useState([]);
+  const [selectedFiltreCategory, setSelectedFiltreCategory] = useState([]);
+  const [selectedFiltreTag, setSelectedFiltreTag] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedProductType, setSelectedProductType] = useState();
   const [selectedTag, setSelectedTag] = useState([]);
   const [selectedTax, setSelectedTax] = useState([]);
-  console.log(selectedTag)
+  const handleFiltreCategoryChange = async (selectedOptions) => {
+    setSelectedFiltreCategory(selectedOptions);
+    await getAllProducts(); // Filtre değiştiğinde verileri yeniden getir
+  };
+
+  const handleFiltreTagChange = async (selectedOptions) => {
+    setSelectedFiltreTag(selectedOptions);
+    await getAllProducts(); // Filtre değiştiğinde verileri yeniden getir
+  };
   const formattedCategories = categories.map(category => ({
     value: category.id,
     label: category.name
@@ -308,7 +369,6 @@ const ProductList = () => {
     updated_at: "",
   });
 
-  console.log(formData);
   const [editId, setEditedId] = useState();
   const [view, setView] = useState({
     edit: false,
@@ -375,14 +435,14 @@ const ProductList = () => {
     let submittedData = {
       // Eklenen gerekli alanlar
       added_by: "admin64",
-      category: 5,
+      category: selectedCategory ? selectedCategory.value : null,
       description: description,
       name: name,
       purchase_price: purchase_price,
       sale_price: sale_price,
       tags: selectedTag.map((tag) => tag.value),
-      tax_rate: "20.00",
-      product_type: selectedProductType.name
+      tax_rate: selectedTax ? selectedTax.value : null,
+      product_type: selectedProductType ? selectedProductType.name : null,
     };
 
     try {
@@ -426,18 +486,17 @@ const ProductList = () => {
       if (item.id === editId) {
         submittedData = {
           added_by: "admin64",
-          category: 5,
+          categories: formData.category, // ID'leri alıyoruz
+          tags: formData.tags.map(tag => tag.value || tag), // ID'leri alıyoruz
           description: formData.description,
           name: formData.name,
           purchase_price: formData.purchase_price,
           sale_price: formData.sale_price,
-          tags: [1],
-          tax_rate: "20.00",
+          tax_rate: formData.tax_rate || selectedTax.id,
           product_type: formData.product_type || selectedProductType.name
         };
       }
     });
-
 
     try {
       const response = await axios.put(`${BASE_URL}products/${editId}`, submittedData, {
@@ -463,14 +522,14 @@ const ProductList = () => {
       if (item.id === id) {
         setFormData({
           added_by: "admin64",
-          category: [],
+          category: item.category,
           created_at: item.created_at,
           description: item.description,
           name: item.name,
           product_type: item.product_type,
           purchase_price: item.purchase_price,
           sale_price: item.sale_price,
-          tags: [],
+          tags: item.tags,
           tax_rate: item.tax_rate,
           updated_at: item.updated_at,
 
@@ -553,7 +612,6 @@ const ProductList = () => {
   const indexOfFirstItem = indexOfLastItem - itemPerPage;
   const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
 
-
   // Change Page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -562,6 +620,7 @@ const ProductList = () => {
     <>
       <Head title="Homepage"></Head>
       <Content>
+        <ToastContainer />
         <BlockHead size="sm">
           <BlockBetween>
             <BlockHeadContent>
@@ -572,42 +631,22 @@ const ProductList = () => {
 
             <BlockHeadContent>
               <div className="toggle-wrap nk-block-tools-toggle">
-                <a
-                  href="#more"
-                  className="btn btn-icon btn-trigger toggle-expand me-n1"
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    updateSm(!sm);
-                  }}
-                >
-                  <Icon name="more-v"></Icon>
-                </a>
-                <div className="toggle-expand-content" style={{ display: sm ? "block" : "none" }}>
-                  <ul className="nk-block-tools g-3">
+
+                <div className="">
+                  <Button
+                    className="toggle d-inline-flex"
+                    color="primary"
+                    onClick={() => {
+                      toggle("add");
+                    }}
+                  >
+
+                    <span>Yeni Ürün Ekle</span>
+                  </Button>
 
 
-                    <li className="nk-block-tools-opt">
-                      <Button
-                        className="toggle btn btn-primary d-md-none"
-                        color="primary"
-                        onClick={() => {
-                          toggle("add");
-                        }}
-                      >
-                        Yeni Ürün Ekle
-                      </Button>
-                      <Button
-                        className="toggle d-none d-md-inline-flex"
-                        color="primary"
-                        onClick={() => {
-                          toggle("add");
-                        }}
-                      >
 
-                        <span>Yeni Ürün Ekle</span>
-                      </Button>
-                    </li>
-                  </ul>
+
                 </div>
               </div>
             </BlockHeadContent>
@@ -615,7 +654,7 @@ const ProductList = () => {
           </BlockBetween>
 
         </BlockHead>
-        <ul className="nk-block-tools gx-3" style={{ paddingBottom: "1.75rem" }}>
+        <ul className="nk-block-tools persons-tools-ul d-md-flex d-inline-block" style={{ paddingBottom: "1.75rem" }}>
           <li>
             <div className="form-control-wrap">
               <div className="form-icon form-icon-left">
@@ -623,42 +662,39 @@ const ProductList = () => {
               </div>
               <input
                 type="text"
-                className="form-control"
+                className="form-control "
                 id="default-04"
-                placeholder="Ürünlerde ara..."
+                placeholder="Kişilerde Ara..."
                 onChange={(e) => onFilterChange(e)}
               />
             </div>
           </li>
-          <li>
-            <UncontrolledDropdown>
-              <DropdownToggle
-                color="transparent"
-                className="dropdown-toggle dropdown-indicator btn btn-outline-light btn-white"
-              >
-                Kategori
-              </DropdownToggle>
-              <DropdownMenu end>
-                <ul className="link-list-opt no-bdr">
 
-                </ul>
-              </DropdownMenu>
-            </UncontrolledDropdown>
+          <li>
+            <div className="form-group">
+
+              <RSelect
+                name="category"
+                isMulti
+                placeholder="Kategori"
+                options={formattedCategories}
+                onChange={(selectedOptions) => handleFiltreCategoryChange(selectedOptions)}
+                value={selectedFiltreCategory}
+              />
+            </div>
           </li>
-          <li>
-            <UncontrolledDropdown>
-              <DropdownToggle
-                color="transparent"
-                className="dropdown-toggle dropdown-indicator btn btn-outline-light btn-white"
-              >
-                Etiket
-              </DropdownToggle>
-              <DropdownMenu end>
-                <ul className="link-list-opt no-bdr">
+          <li className="d-md-inline-block d-none">
+            <div className="form-group">
 
-                </ul>
-              </DropdownMenu>
-            </UncontrolledDropdown>
+              <RSelect
+                name="tag"
+                isMulti
+                placeholder="Etiket"
+                options={formattedTags}
+                onChange={(selectedOptions) => handleFiltreTagChange(selectedOptions)}
+                value={selectedFiltreTag}
+              />
+            </div>
           </li>
 
 
@@ -682,10 +718,10 @@ const ProductList = () => {
                           <label className="custom-control-label" htmlFor="uid_1"></label>
                         </div>
                       </DataTableRow>
-                      <DataTableRow >
+                      <DataTableRow size="md">
                         <span>Türü</span>
                       </DataTableRow>
-                      <DataTableRow size="md">
+                      <DataTableRow >
                         <span>Ürün Adı</span>
                       </DataTableRow>
                       <DataTableRow>
@@ -697,13 +733,13 @@ const ProductList = () => {
                       <DataTableRow size="md">
                         <span>Etiket</span>
                       </DataTableRow>
-                      <DataTableRow size="md">
+                      <DataTableRow size="lg">
                         <span>Alış Fiyatı</span>
                       </DataTableRow>
-                      <DataTableRow size="md">
+                      <DataTableRow size="lg">
                         <span>Satış Fiyatı</span>
                       </DataTableRow>
-                      <DataTableRow size="md">
+                      <DataTableRow size="lg">
                         <span>O. Tarihi</span>
                       </DataTableRow>
 
@@ -777,7 +813,7 @@ const ProductList = () => {
                                 <label className="custom-control-label" htmlFor={item.id + "uid1"}></label>
                               </div>
                             </DataTableRow>
-                            <DataTableRow>
+                            <DataTableRow size="md">
 
                               <span className="badge bg-outline-secondary me-1">
                                 {item.product_type === "service" ? "Servis" : "Ürün"}
@@ -794,30 +830,35 @@ const ProductList = () => {
                               </Link>
                             </DataTableRow>
 
-                            <DataTableRow size="md">
+                            <DataTableRow>
                               <span style={{
                                 display: 'inline-block',
-                                width: '300px',
+                                maxWidth: '200px',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis'
                               }} className="tb-sub">{item.description}</span>
                             </DataTableRow>
-                            <DataTableRow>
-                              {item.categories && item.categories.length > 0 && item.categories.map((category, index) => (
-                                <span key={index} className="badge bg-outline-secondary me-1">
-                                  {category.label}
-                                </span>
-                              ))}
-                            </DataTableRow>
-                            <DataTableRow>
-                              {item.tags && item.tags.length > 0 && item.tags.map((tag, index) => (
-                                <span key={index} className="badge bg-outline-secondary me-1">
-                                  {tag.label}
-                                </span>
-                              ))}
+                            <DataTableRow size="md">
+                              {(() => {
+                                const category = categories.find(cat => cat.id === item.category);
+                                return (
+                                  <span className="badge bg-outline-secondary me-1"> {category ? category.name : ''}</span>
+
+                                );
+                              })()}
                             </DataTableRow>
                             <DataTableRow size="md">
+                              {item.tags && item.tags.length > 0 && item.tags.map((tagId, index) => {
+                                const tag = tags.find(tag => tag.id === tagId);
+                                return tag ? (
+                                  <span key={index} className="badge bg-outline-secondary me-1">
+                                    {tag.name}
+                                  </span>
+                                ) : null;
+                              })}
+                            </DataTableRow>
+                            <DataTableRow size="lg">
                               <NumericFormat
                                 value={item.purchase_price}
                                 displayType={'text'}
@@ -827,7 +868,7 @@ const ProductList = () => {
                               />
                             </DataTableRow>
 
-                            <DataTableRow size="md">
+                            <DataTableRow size="lg">
                               <NumericFormat
                                 value={item.sale_price}
                                 displayType={'text'}
@@ -836,7 +877,7 @@ const ProductList = () => {
                                 renderText={(value) => <span className="tb-sub">{value}</span>}
                               />
                             </DataTableRow>
-                            <DataTableRow size="md">
+                            <DataTableRow size="lg">
                               <span className="tb-sub">Oluşturma Tarihi</span>
                             </DataTableRow>
 
@@ -944,18 +985,20 @@ const ProductList = () => {
                   <Row className="g-3">
                     <Col lg="4">
                       <div className="form-group">
-                        <label className="form-label text-soft">
-
+                        <label className="form-label">
                           Türü
-
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
-                            name="type"
                             placeholder="Türü"
+
                             options={product_type}
-                            value={selectedProductType}
-                            onChange={(selectedOption) => handleProductTypeChange(selectedOption)} />
+                            value={product_type.find(option => option.name === formData.product_type)}
+                            onChange={(selectedOption) => {
+                              setFormData({ ...formData, product_type: selectedOption.name });
+                              setSelectedProductType(selectedOption);
+                            }}
+                          />
                         </div>
                       </div>
                     </Col>
@@ -1042,30 +1085,57 @@ const ProductList = () => {
 
                     <Col lg="4">
                       <div className="form-group">
-                        <label className="form-label" htmlFor="category">
+                        <label className="form-label">
                           Kategori
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
-                            isMulti
+                            placeholder="Kategori"
+
                             options={formattedCategories}
-                            value={formData.categories}
-                            onChange={(value) => setFormData({ ...formData, categories: value })}
+                            value={formattedCategories.find(option => option.value === formData.category)}
+                            onChange={(selectedOption) => {
+                              setFormData({ ...formData, country: selectedOption.value });
+                              setSelectedCategory(selectedOption);
+                            }}
                           />
                         </div>
                       </div>
                     </Col>
                     <Col lg="4">
                       <div className="form-group">
-                        <label className="form-label" htmlFor="category">
-                          Etiketler
+                        <label className="form-label">
+                          Etiket
                         </label>
                         <div className="form-control-wrap">
                           <RSelect
+                            placeholder="Etiket"
                             isMulti
                             options={formattedTags}
-                            value={formData.tags}
-                            onChange={(value) => setFormData({ ...formData, tags: value })}
+                            value={formData.tags.length > 0 ? formData.tags.map(tagId => formattedTags.find(tag => tag.value === tagId)) : []}
+                            onChange={(selectedOptions) => setFormData({
+                              ...formData,
+                              tags: selectedOptions ? selectedOptions.map(option => option.value) : []
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </Col>
+                    <Col lg="4">
+                      <div className="form-group">
+                        <label className="form-label">
+                          KDV Oranı
+                        </label>
+                        <div className="form-control-wrap">
+                          <RSelect
+                            placeholder="KDV Oranı"
+
+                            options={formattedTaxes}
+                            value={formattedTaxes.find(option => option.id === formData.tax_rate)}
+                            onChange={(selectedOption) => {
+                              setFormData({ ...formData, tax_rate: selectedOption.id });
+                              setSelectedTax(selectedOption);
+                            }}
                           />
                         </div>
                       </div>
@@ -1239,7 +1309,7 @@ const ProductList = () => {
                     <div className="form-control-wrap">
                       <RSelect
                         name="category"
-                        isMulti
+
                         placeholder="Kategori"
                         options={formattedCategories}
                         onChange={(selectedOption) => handleCategoryChange(selectedOption)}
