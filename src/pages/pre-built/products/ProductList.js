@@ -39,7 +39,7 @@ const ProductList = () => {
   const [tax, setTax] = useState([]);
   const [data, setData] = useState([]);
   const [originalData, setOriginalData] = useState([]);
-  console.log(tax)
+  console.log(data)
 
   const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
@@ -233,6 +233,7 @@ const ProductList = () => {
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedProductType, setSelectedProductType] = useState();
   const [selectedTag, setSelectedTag] = useState([]);
+  const [selectedTax, setSelectedTax] = useState([]);
   console.log(selectedTag)
   const formattedCategories = categories.map(category => ({
     value: category.id,
@@ -261,6 +262,9 @@ const ProductList = () => {
   };
   const handleTagChange = (selectedOption) => {
     setSelectedTag(selectedOption);
+  };
+  const handleTaxChange = (selectedOption) => {
+    setSelectedTax(selectedOption);
   };
   useEffect(() => {
     getAllCategories()
@@ -1171,29 +1175,16 @@ const ProductList = () => {
                     </label>
                     <div className="form-control-wrap">
                       <RSelect
-                        name="type"
-                        placeholder="Türü"
-                        {...register('product_type', {
-                          required: "Lütfen boş bırakılan alanları doldurunuz.",
-                        })}
-                        options={product_type}
-                        value={selectedProductType}
-                        onChange={(selectedOption) => handleProductTypeChange(selectedOption)}
-                      />
-                      {errors.product_type && (
-                        <span
-                          style={{
-                            color: '#e85347',
-                            fontSize: '11px',
-                            fontStyle: 'italic'
-                          }}
-                          className="invalid"
-                        >
-                          {errors.product_type.message}
-                        </span>
-                      )}
-                    </div>
+                        name="tur"
 
+                        placeholder="Türü"
+                        options={product_type}
+                        onChange={(selectedOption) => handleProductTypeChange(selectedOption)}
+                        value={selectedProductType}
+
+                      />
+
+                    </div>
                   </div>
                 </Col>
                 <Col size="6">
@@ -1344,6 +1335,8 @@ const ProductList = () => {
                         isMulti
                         placeholder="KDV Oranı"
                         options={formattedTaxes}
+                        onChange={(selectedOption) => setSelectedTax(selectedOption)}
+                        value={selectedTax}
                       />
                     </div>
                   </div>

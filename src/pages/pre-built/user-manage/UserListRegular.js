@@ -43,7 +43,7 @@ const BASE_URL = "https://tiosone.com/customers/api/"
 const UserListRegularPage = () => {
 
   const [data, setData] = useState([]);
-  console.log(data)
+
 
   const [user, setUser] = useState([]);
 
@@ -244,10 +244,6 @@ const UserListRegularPage = () => {
       if (query.length > 0) {
         url += '?' + query.join('&');
       }
-
-      console.log("Constructed URL:", BASE_URL + url);
-      console.log("Selected Categories:", selectedFiltreCategory.map(item => item.label));
-      console.log("Selected Tags:", selectedFiltreTag.map(item => item.label));
 
       const response = await axios.get(BASE_URL + url, {
         headers: {
@@ -578,7 +574,6 @@ const UserListRegularPage = () => {
       customer_representatives: selectedRepresentative.map((representative) => representative.value),
     };
 
-    console.log(submittedData);
 
     try {
       const response = await axios.post(BASE_URL + "persons/", submittedData, {

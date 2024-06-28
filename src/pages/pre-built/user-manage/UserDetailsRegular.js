@@ -29,6 +29,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
+
 const BASE_URL = "https://tiosone.com/customers/api/";
 
 const PersonDetailsPage = () => {

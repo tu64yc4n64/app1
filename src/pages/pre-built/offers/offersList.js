@@ -36,6 +36,8 @@ const BASE_URL = "https://tiosone.com/sales/api/"
 
 const OfferListPage = () => {
     const [data, setData] = useState([]);
+    const [tags, setTags] = useState([]);
+    const [user, setUser] = useState([]);
     console.log(data)
     const [originalData, setOriginalData] = useState([]);
 
@@ -69,6 +71,39 @@ const OfferListPage = () => {
         }
     };
 
+
+    const getAllTags = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+        try {
+            const response = await axios.get(BASE_URL + "tags/?type=offer", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setTags(response.data);
+
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+                    try {
+                        const response = await axios.get(BASE_URL + "tags/?type=offer", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
+                }
+            } else {
+                console.error("There was an error fetching the data!", error);
+            }
+        }
+    };
     const getAllOffers = async () => {
         let accessToken = localStorage.getItem('accessToken');
         try {
@@ -102,15 +137,58 @@ const OfferListPage = () => {
             }
         }
     };
+    const getAllUsers = async () => {
+        let accessToken = localStorage.getItem('accessToken');
 
+
+        try {
+            const response = await axios.get("https://tiosone.com/users/api/users/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setUser(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+
+                accessToken = await refreshAccessToken();
+                if (accessToken) {
+
+                    try {
+                        const response = await axios.get("https://tiosone.com/users/api/users/", {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        });
+                        setUser(response.data);
+                    } catch (retryError) {
+                        console.error("Retry error after refreshing token", retryError);
+                    }
+                }
+            } else {
+                console.error("There was an error fetching the data!", error);
+            }
+        }
+    };
     useEffect(() => {
         getAllOffers();
+        getAllTags();
+        getAllUsers();
 
     }, []);
 
     const [sm, updateSm] = useState(false);
     const [itemPerPage, setItemPerPage] = useState(10);
     const [onSearch, setonSearch] = useState(true);
+    const formatDataForSelect = (data, labelKey, valueKey) => {
+        return data.map(item => ({
+            value: item[valueKey],
+            label: item[labelKey]
+        }));
+    };
+    const formattedTags = formatDataForSelect(tags, "name", "id");
 
     const [formData, setFormData] = useState({
         added_by: 1,
@@ -173,9 +251,9 @@ const OfferListPage = () => {
         setFormData({
             added_by: 1,
             address: "",
-            category: 2,
+            category: null,
             city: "",
-            company: 1,
+            company: "",
             country: "",
             created_at: "",
             created_by: 1,
@@ -213,7 +291,7 @@ const OfferListPage = () => {
                     address: formData.address,
                     category: 2,
                     city: formData.city,
-                    company: 1,
+                    company: null,
                     country: formData.country,
                     created_at: formData.created_at,
                     created_by: 1,
@@ -229,7 +307,7 @@ const OfferListPage = () => {
                     phone: formData.phone,
                     postal_code: formData.postal_code,
                     status: formData.status,
-                    tags: [],
+                    tags: formData.tags.map(tag => tag.value || tag),
                     title: formData.title,
                     total: formData.total,
                     updated_at: formData.updated_at,
@@ -252,11 +330,24 @@ const OfferListPage = () => {
             setView({ edit: false, add: false });
         } catch (error) {
             console.error('Veritabanını güncelleme sırasında hata oluştu:', error);
+
+            if (error.response) {
+                // Sunucudan gelen yanıtın detayı
+                console.error('Hata Yanıt Verisi:', error.response.data);
+                console.error('Hata Yanıt Durum Kodu:', error.response.status);
+                console.error('Hata Yanıt Başlıkları:', error.response.headers);
+            } else if (error.request) {
+                // İstek yapıldı ama sunucudan yanıt alınamadı
+                console.error('Sunucudan yanıt alınamadı:', error.request);
+            } else {
+                // İstek hazırlanırken bir hata oluştu
+                console.error('İstek hazırlama hatası:', error.message);
+            }
+
+            console.error('Hata Yapılandırma:', error.config);
         }
-        newItems[index] = submittedData;
-        resetForm();
-        setView({ edit: false, add: false });
     };
+
 
     const onEditClick = (id) => {
         data.forEach((item) => {
@@ -524,10 +615,15 @@ const OfferListPage = () => {
                                                         <DataTableRow size="md">
                                                             <span className="tb-sub">{item.valid_until}</span>
                                                         </DataTableRow>
-                                                        <DataTableRow size="md">
-                                                            {item.tags.map((tag, id) => (
-                                                                <span key={id} className="badge text-center bg-outline-secondary me-1">{tag.name}</span>
-                                                            ))}
+                                                        <DataTableRow size="sm">
+                                                            {item.tags && item.tags.length > 0 && item.tags.map((tagId, index) => {
+                                                                const tag = tags.find(tag => tag.id === tagId);
+                                                                return tag ? (
+                                                                    <span key={index} className="badge bg-outline-secondary me-1">
+                                                                        {tag.name}
+                                                                    </span>
+                                                                ) : null;
+                                                            })}
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
                                                             <span className="tb-sub">{item.created_at}</span>
@@ -536,7 +632,13 @@ const OfferListPage = () => {
                                                             <span className="badge bg-outline-secondary">{item.status}</span>
                                                         </DataTableRow>
                                                         <DataTableRow size="md">
-                                                            <span style={{ paddingLeft: "5px" }} className="tb-sub">{item.created_by}</span>
+                                                            {(() => {
+                                                                const created = user.find(cr => cr.id === item.created_by);
+                                                                return (
+                                                                    <span className="tb-sub"> {created ? created.username : ''}</span>
+
+                                                                );
+                                                            })()}
                                                         </DataTableRow>
                                                         <DataTableRow className="nk-tb-col-tools">
                                                             <ul className="nk-tb-actions gx-1 my-n1">
@@ -731,18 +833,20 @@ const OfferListPage = () => {
                                         </Col>
                                         <Col lg="4">
                                             <div className="form-group">
-                                                <label className="form-label text-soft" htmlFor="tags">
+                                                <label className="form-label">
                                                     Etiket
                                                 </label>
                                                 <div className="form-control-wrap">
-                                                    <input
-                                                        id="tags"
-                                                        type="text"
-                                                        className="form-control"
-
-                                                        value={formData.tags}
-                                                        onChange={(e) => setFormData({ ...formData, tags: e.target.value })} />
-
+                                                    <RSelect
+                                                        placeholder="Etiket"
+                                                        isMulti
+                                                        options={formattedTags}
+                                                        value={formData.tags.length > 0 ? formData.tags.map(tagId => formattedTags.find(tag => tag.value === tagId)) : []}
+                                                        onChange={(selectedOptions) => setFormData({
+                                                            ...formData,
+                                                            tags: selectedOptions ? selectedOptions.map(option => option.value) : []
+                                                        })}
+                                                    />
                                                 </div>
                                             </div>
                                         </Col>

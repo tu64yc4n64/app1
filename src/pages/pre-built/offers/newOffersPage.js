@@ -5,7 +5,6 @@ import { Input, Row, Col, ButtonGroup, ButtonToolbar } from "reactstrap";
 import DatePicker from "react-datepicker";
 import {
     Block,
-
     BlockHead,
     BlockHeadContent,
     BlockTitle,
@@ -13,31 +12,27 @@ import {
     Button,
     BlockBetween,
     PreviewCard,
-
     RSelect
-
-
 } from "../../../components/Component";
 import { ToastContainer, toast } from 'react-toastify';
-
+import AddProductModal from "./AddProductModal"
 import 'react-toastify/dist/ReactToastify.css';
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import "./style.css"
+import { NumericFormat } from 'react-number-format';
 const BASE_URL = "https://tiosone.com/sales/api/"
 
 
 const NewOffersPage = () => {
-
     const [categories, setCategories] = useState([]);
     const [tags, setTags] = useState([]);
     const [data, setData] = useState([]);
     const [tax, setTax] = useState([]);
     const [customers, setCustomers] = useState([]);
-    console.log(customers)
+    const [products, setProducts] = useState([])
 
     const axiosInstance = axios.create();
-
     axiosInstance.interceptors.response.use(
         response => response,
         async error => {
@@ -54,101 +49,6 @@ const NewOffersPage = () => {
             return Promise.reject(error);
         }
     );
-    const getAllTax = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-
-        try {
-            const response = await axiosInstance.get("https://tiosone.com/hub/api/taxrates/", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setTax(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
-    const getAllCustomers = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-
-        try {
-            const response = await axiosInstance.get("https://tiosone.com/customers/api/customers/", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setCustomers(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
-
-    const getAllCategories = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-
-        try {
-            const response = await axiosInstance.get(BASE_URL + "categories?type=offer", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setCategories(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
-
-    const getAllTags = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-
-        try {
-            const response = await axiosInstance.get(BASE_URL + "tags?type=offer", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setTags(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
-
-
-
-    const getAllOfferItems = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-        try {
-            const response = await axiosInstance.get(BASE_URL + "offer-items/", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setData(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
-
-
-    const getAllUSers = async () => {
-        let accessToken = localStorage.getItem('accessToken');
-        try {
-            const response = await axiosInstance.get("https://tiosone.com/users/api/users/", {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            setUsers(response.data);
-        } catch (error) {
-            console.error("There was an error fetching the data!", error);
-        }
-    };
     const refreshAccessToken = async () => {
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
@@ -177,6 +77,109 @@ const NewOffersPage = () => {
             return null;
         }
     };
+    const getAllTax = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axiosInstance.get("https://tiosone.com/hub/api/taxrates/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setTax(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+    const getAllProducts = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axiosInstance.get("https://tiosone.com/products/api/products/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setProducts(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+    const getAllCustomers = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axiosInstance.get("https://tiosone.com/customers/api/customers/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setCustomers(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+    const getAllCategories = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axiosInstance.get(BASE_URL + "categories?type=offer", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setCategories(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+    const getAllTags = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+
+        try {
+            const response = await axiosInstance.get(BASE_URL + "tags?type=offer", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setTags(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+    const getAllOfferItems = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+        try {
+            const response = await axiosInstance.get(BASE_URL + "offer-items/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setData(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
+    const getAllUSers = async () => {
+        let accessToken = localStorage.getItem('accessToken');
+        try {
+            const response = await axiosInstance.get("https://tiosone.com/users/api/users/", {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            setUsers(response.data);
+        } catch (error) {
+            console.error("There was an error fetching the data!", error);
+        }
+    };
     useEffect(() => {
         getAllOfferItems();
         getAllUSers();
@@ -184,27 +187,46 @@ const NewOffersPage = () => {
         getAllCustomers()
         getAllCategories();
         getAllTags();
+        getAllProducts();
     }, []);
+    const handleEditChange = (values, id, fieldName) => {
+        if (values && values.value !== undefined) {
+            const value = values.value;
+            setOffer(prevOffer => {
+                const newOffer = prevOffer.map(item =>
+                    item.id === id ? { ...item, [fieldName]: value } : item
+                );
 
-    const handleEditChange = (e, id) => {
-        const { name, value } = e.target;
-        setOffer(prevOffer => {
-            const newOffer = prevOffer.map(item =>
-                item.id === id ? { ...item, [name]: value } : item
-            );
-
-            // Calculate the total based on updated quantity, unit_price, and tax
-            return newOffer.map(item => {
-                if (item.id === id) {
-                    const quantity = parseFloat(item.quantity) || 0;
-                    const unit_price = parseFloat(item.unit_price) || 0;
-                    const tax = parseFloat(item.tax) || 0;
-                    item.total = (quantity * unit_price * ((tax + 100) / 100)).toFixed(2);
-                }
-                return item;
+                return newOffer.map(item => {
+                    if (item.id === id) {
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const unit_price = parseFloat(item.unit_price) || 0;
+                        const tax = parseFloat(item.tax.value) || 0; // Değeri buradan al
+                        item.total = (quantity * unit_price * ((tax + 100) / 100)).toFixed(2);
+                    }
+                    return item;
+                });
             });
-        });
+        } else if (values && values.target) {
+            const { name, value } = values.target;
+            setOffer(prevOffer => {
+                const newOffer = prevOffer.map(item =>
+                    item.id === id ? { ...item, [name]: value } : item
+                );
+
+                return newOffer.map(item => {
+                    if (item.id === id) {
+                        const quantity = parseFloat(item.quantity) || 0;
+                        const unit_price = parseFloat(item.unit_price) || 0;
+                        const tax = parseFloat(item.tax.value) || 0; // Değeri buradan al
+                        item.total = (quantity * unit_price * ((tax + 100) / 100)).toFixed(2);
+                    }
+                    return item;
+                });
+            });
+        }
     };
+
 
     const status = [
         {
@@ -227,7 +249,6 @@ const NewOffersPage = () => {
             label: "Süresi Doldu",
             value: "expired"
         }]
-
     const formatDate = (date) => {
         if (!date) return '';
         const day = date.getDate().toString().padStart(2, '0');
@@ -235,7 +256,6 @@ const NewOffersPage = () => {
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     };
-
     const formatDataForSelect = (data, labelKey, valueKey) => {
         return data.map(item => ({
             value: item[valueKey],
@@ -252,30 +272,31 @@ const NewOffersPage = () => {
         email: person.email,
         phone: person.phone,
     })) || []; // Return an empty array if customers.people is undefined
-
-    const formattedOfferItems = data.map(item => ({
+    const formattedOfferItems = products.map(item => ({
         value: item.id,
-        label: item.product_name,
+        label: item.name,
         description: item.description,
         quantity: item.quantity,
-        tax: item.tax,
+        tax: item.tax_rate,
         total: item.total,
-        unit_price: item.unit_price,
+        unit_price: item.sale_price,
 
     }));
-
     const [selectedOfferItem, setSelectedOfferItem] = useState([]);
+
     const handleOfferItemChange = (selectedOption) => {
         if (selectedOption) {
+            const selectedTaxRate = tax.find(taxRate => taxRate.id === selectedOption.tax);
+            const formattedTaxRate = formattedTaxes.find(t => t.value === selectedTaxRate.multiplier);
+
             setNewOfferData({
                 description: selectedOption.description,
-                product: selectedOption.product,
+                product: selectedOption.value,
                 product_name: selectedOption.label,
-                quantity: selectedOption.quantity,
-                tax: selectedOption.tax,
-                total: selectedOption.total,
+                tax: selectedTaxRate,
                 unit_price: selectedOption.unit_price,
             });
+            setSelectedTax(formattedTaxRate); // Vergi değerini state'e atama
         }
         setSelectedOfferItem(selectedOption); // Seçilen değeri ayarla
     };
@@ -283,27 +304,27 @@ const NewOffersPage = () => {
 
     const [users, setUsers] = useState([])
     const formattedUsers = formatDataForSelect(users, "username", "id");
+    const [selectedCategory, setSelectedCategory] = useState(null);
 
-
-    const [selectedCategory, setSelectedCategory] = useState();
-    console.log(selectedCategory)
     const [selectedTag, setSelectedTag] = useState([]);
     const formattedCategories = formatDataForSelect(categories, "name", "id");
-    console.log(formattedCategories)
+
     const formattedTags = formatDataForSelect(tags, "name", "id");
     const formattedTaxes = formatDataForSelect(tax, "rate", "multiplier");
-    const formattedCustomer = formatDataForSelect(customers.companies || [], "name", "id");
 
+    const formattedCustomer = formatDataForSelect(customers.companies || [], "name", "id");
     const formattedCustomers = [...formattedPersons, ...formattedCustomer];
-    console.log(formattedCustomers)
+
     const handleCategoryChange = (selectedOptions) => {
         setSelectedCategory(selectedOptions);
     };
     const handleTagChange = (selectedOptions) => {
         setSelectedTag(selectedOptions);
     };
-
-
+    const [modal, setModal] = useState({
+        edit: false,
+        add: false,
+    });
     const [formData, setFormData] = useState({
         added_by: "",
         address: "",
@@ -329,8 +350,8 @@ const NewOffersPage = () => {
         total: "",
         updated_at: "",
         valid_until: "",
-
     });
+
     const handleCustomerChange = (selectedOption) => {
         if (selectedOption) {
             const customer = formattedCustomers.find(c => c.value === selectedOption.value);
@@ -339,10 +360,11 @@ const NewOffersPage = () => {
                     ...formData,
                     customer: selectedOption.value,
                     address: customer.address_line,
+                    customer_name: customer.label,
                     city: customer.city,
                     district: customer.district,
                     country: customer.country,
-                    postal_code: "64000",  // Bu kısmı müşteri verilerinden almak yerine sabit bir değer olarak bıraktım.
+                    postal_code: customer.postal_code,  // Bu kısmı müşteri verilerinden almak yerine sabit bir değer olarak bıraktım.
                     email: customer.email,
                     phone: customer.phone,
                 });
@@ -361,7 +383,6 @@ const NewOffersPage = () => {
             });
         }
     };
-
     const onFormSubmit = async (form) => {
         let accessToken = localStorage.getItem('accessToken');
         const { title, email, phone, address, status } = formData; // formData'dan gerekli verileri alın
@@ -373,7 +394,7 @@ const NewOffersPage = () => {
         let submittedData = {
             added_by: formData.added_by,
             address: formData.address, // formData'dan alınan adres
-            category: selectedCategory.value,
+            category: selectedCategory ? selectedCategory.value : null, // Değiştirilen kısım
             city: formData.city, // formData'dan alınan şehir
             company: "",
             country: formData.country, // formData'dan alınan ülke
@@ -400,11 +421,10 @@ const NewOffersPage = () => {
             status: formData.status,
             tags: selectedTag.map((tag) => tag.value),
             title: formData.title, // formData'dan alınan başlık
-            total: total, // Hesaplanan toplam değeri buraya ekle
+            total: "", // Hesaplanan toplam değeri buraya ekle
             updated_at: formatDate(new Date()), // Mevcut tarihi formatla
             valid_until: formatDate(formData.valid_until), // formData'dan alınan tarihi formatla
         };
-        console.log(submittedData)
 
         try {
             const response = await axios.post(BASE_URL + "offers/", submittedData, {
@@ -429,13 +449,6 @@ const NewOffersPage = () => {
             console.error("Error Config:", error.config);
         }
     };
-
-
-
-
-
-
-
 
     const resetForm = () => {
         setSelectedCategory([])
@@ -471,45 +484,66 @@ const NewOffersPage = () => {
 
         reset({});
     };
-
-
     const [startDate, setStartDate] = useState(null);
     const [finishDate, setFinishDate] = useState(null);
     const [offer, setOffer] = useState([])
-    console.log(offer)
+
     const [selectedTax, setSelectedTax] = useState(null);
-    console.log(selectedTax)
+
     const [discount, setDiscount] = useState({
         label: "0%",
         value: "0"
     });
-
-
     const [newOfferData, setNewOfferData] = useState({
         description: "",
         product: "",
         product_name: "",
-        quantity: "",
         tax: "",
+        unit_price: "",
         total: "",
-        unit_price: ""
+        quantity: ""
+
     });
-    const handleTaxChange = (selectedOption) => {
-        setSelectedTax(selectedOption);
+    const handleTaxChange = (selectedOption, id) => {
+        setOffer(prevOffer => {
+            const newOffer = prevOffer.map(item =>
+                item.id === id ? { ...item, tax: { value: selectedOption.value, label: selectedOption.label } } : item
+            );
+
+            return newOffer.map(item => {
+                if (item.id === id) {
+                    const quantity = parseFloat(item.quantity) || 0;
+                    const unit_price = parseFloat(item.unit_price) || 0;
+                    const tax = parseFloat(selectedOption.value) || 0;
+                    item.total = (quantity * unit_price * ((tax + 100) / 100)).toFixed(2);
+                }
+                return item;
+            });
+        });
     };
+
     const handleDiscountChange = (selectedOption) => {
         setDiscount(selectedOption);
     };
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setNewOfferData((prevState) => ({
-            ...prevState,
-            [name]: value,
-        }));
-    }
+        if (e && e.target) {
+            // Standart inputlar için
+            const { name, value } = e.target;
+            setNewOfferData((prevState) => ({
+                ...prevState,
+                [name]: value,
+            }));
+        } else if (e && e.value) {
+            // NumericFormat için
+            setNewOfferData((prevState) => ({
+                ...prevState,
+                unit_price: e.value,
+            }));
+        }
+    };
+
     const handleAddOffer = (event) => {
         event.preventDefault();
-
         // Inputların boş olup olmadığını kontrol edin
         if (!newOfferData.description || !newOfferData.product_name || !newOfferData.quantity || !newOfferData.unit_price || !selectedTax) {
             toast.error("Ürün Eklenirken Bir Hata Oluştu.", {
@@ -523,39 +557,31 @@ const NewOffersPage = () => {
             });
             return;
         }
-
         const newOfferItem = {
             id: offer.length + 1, // Basit bir benzersiz id oluşturma
             description: newOfferData.description,
             product: newOfferData.product,
             product_name: newOfferData.product_name,
-            quantity: newOfferData.quantity,
             tax: selectedTax,
-            total: newOfferData.total,
             unit_price: newOfferData.unit_price,
+            total: newOfferData.total,
+            quantity: newOfferData.quantity
         };
         setOffer((prevOffer) => [...prevOffer, newOfferItem]);
-
         setSelectedTax(null);
         setSelectedOfferItem(null); // RSelect bileşeninin seçimini temizle
-
         setNewOfferData({
             description: "",
             product: "",
             product_name: "",
-            quantity: "",
             tax: "",
-            total: "",
             unit_price: "",
+            total: "",
+            quantity: "",
         });
     };
-
-
-
-
     const [discountValue, setDiscountValue] = useState(0);
     const [discountType, setDiscountType] = useState("percentage");
-
     const calculateSubtotal = () => {
         let subtotal = 0;
         offer.forEach(item => {
@@ -564,7 +590,6 @@ const NewOffersPage = () => {
         });
         return subtotal.toFixed(2);
     };
-
     const calculateDiscount = (subtotal) => {
         if (discountType === "percentage") {
             return (subtotal * (discountValue / 100)).toFixed(2);
@@ -573,7 +598,6 @@ const NewOffersPage = () => {
         }
         return 0;
     };
-
     const calculateTotal = () => {
         const subtotal = parseFloat(calculateSubtotal());
         const discount = parseFloat(calculateDiscount(subtotal));
@@ -582,30 +606,10 @@ const NewOffersPage = () => {
     const handleDeleteOffer = (id) => {
         setOffer(prevOffer => prevOffer.filter(item => item.id !== id));
     };
-
-
-
-
-    const discountData = [
-        {
-            label: "0%",
-            value: "0"
-        },
-        {
-            label: "5%",
-            value: "0.05"
-        },
-        {
-            label: "10%",
-            value: "0.1"
-        },
-        {
-            label: "15%",
-            value: "0.15"
-        }
-    ];
-
-
+    console.log(offer)
+    const addContactHistory = (newProduct) => {
+        setProducts(prevProduct => [newProduct, ...prevProduct]);
+    };
     const { register, handleSubmit, reset, formState: { errors } } = useForm();
     return (
         <Content>
@@ -619,7 +623,6 @@ const NewOffersPage = () => {
                 </BlockBetween>
             </BlockHead>
             <Block size="lg">
-
                 <PreviewCard>
                     <form onSubmit={handleSubmit(onFormSubmit)}>
                         <Row className="gy-4">
@@ -630,7 +633,6 @@ const NewOffersPage = () => {
                                             <label htmlFor="title" className="form-label text-soft">
                                                 Teklif Başlığı
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <Input
                                                     id="title"
@@ -644,7 +646,6 @@ const NewOffersPage = () => {
                                             </div>
                                         </div>
                                     </Col>
-
                                     <Col md="6">
                                         <div className="form-group">
                                             <label className="form-label text-soft">
@@ -680,10 +681,8 @@ const NewOffersPage = () => {
                                             <label className="form-label text-soft">
                                                 Kategori
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <RSelect
-
                                                     options={formattedCategories}
                                                     value={selectedCategory}
                                                     placeholder="Kategori"
@@ -697,7 +696,6 @@ const NewOffersPage = () => {
                                             <label className="form-label text-soft">
                                                 Etiket
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <RSelect
                                                     isMulti
@@ -709,9 +707,6 @@ const NewOffersPage = () => {
                                             </div>
                                         </div>
                                     </Col>
-
-
-
                                 </Row>
                             </Col>
                             <Col lg="6">
@@ -721,7 +716,6 @@ const NewOffersPage = () => {
                                             <label htmlFor="status" className="form-label text-soft">
                                                 Durum
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <RSelect
                                                     name="status"
@@ -754,7 +748,6 @@ const NewOffersPage = () => {
                                             <label htmlFor="status" className="form-label text-soft">
                                                 Kime
                                             </label>
-
                                             <div className="form-control-wrap">
                                                 <RSelect
                                                     name="status"
@@ -887,11 +880,10 @@ const NewOffersPage = () => {
                                                 options={formattedOfferItems}
                                                 onChange={(selectedOptions) => handleOfferItemChange(selectedOptions)}
                                             />
-
                                         </div>
                                     </Col>
                                     <Col>
-                                        <button className="btn btn-primary btn-icon"><Icon name="plus"></Icon></button>
+                                        <button onClick={() => setModal({ add: true })} className="btn btn-primary btn-icon"><Icon name="plus"></Icon></button>
                                     </Col>
                                 </Row>
                             </Col>
@@ -955,15 +947,16 @@ const NewOffersPage = () => {
                                                 <hr className="d-xl-block d-none"></hr>
                                                 <div className="form-group">
                                                     <div className="form-control-wrap">
-                                                        <input
-                                                            name="unit_price"
-                                                            value={newOfferData.unit_price}
-                                                            onChange={handleInputChange}
-                                                            id="default-0"
-                                                            placeholder="Tutar"
-                                                            type="text"
+                                                        <NumericFormat
                                                             className="form-control"
+                                                            id="alis"
+                                                            thousandSeparator="."
+                                                            decimalSeparator=","
+                                                            value={newOfferData.unit_price}
+                                                            onValueChange={handleInputChange}
+                                                            placeholder="Alış Fiyatı (KDV Dahil)"
                                                         />
+
                                                     </div>
                                                 </div>
                                             </Col>
@@ -973,25 +966,22 @@ const NewOffersPage = () => {
                                                 <div className="form-group">
                                                     <div className="form-control-wrap">
                                                         <RSelect
-                                                            value={selectedTax} // Bu satır eklendi
+                                                            value={selectedTax} // Seçilen vergi değerini buraya atıyoruz
                                                             options={formattedTaxes}
                                                             onChange={(selectedOption) => handleTaxChange(selectedOption)}
                                                             placeholder="Vergi"
                                                         />
+
                                                     </div>
                                                 </div>
                                             </Col>
-
                                             <Col xl="1" lg="6" className="pb-xl-0 pb-3">
                                                 <strong className="text-dark"></strong>
                                                 <hr className="d-xl-block d-none"></hr>
-
                                                 <button type="button" onClick={handleAddOffer} className="btn btn-primary btn-icon d-xl-flex d-none"><Icon name="check"></Icon></button>
                                                 <button type="button" onClick={handleAddOffer} className="btn btn-primary d-xl-none d-block">Yeni Fatura Ekle</button>
-
                                             </Col>
                                         </Row>
-
                                     </Col>
                                 </Row>
                             </div>
@@ -1030,7 +1020,6 @@ const NewOffersPage = () => {
                                                                 name="description"
                                                                 value={item.description}
                                                                 onChange={(e) => handleEditChange(e, item.id)}
-
                                                                 id="default-textarea"
                                                                 className="no-resize form-control"
                                                                 placeholder="Açıklama"
@@ -1064,14 +1053,14 @@ const NewOffersPage = () => {
                                                     </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
-                                                            <input
-                                                                name="unit_price"
-                                                                value={item.unit_price}
-                                                                onChange={(e) => handleEditChange(e, item.id)}
-                                                                id="default-0"
-                                                                placeholder="Tutar"
-                                                                type="text"
+                                                            <NumericFormat
                                                                 className="form-control"
+                                                                id="default-0"
+                                                                thousandSeparator="."
+                                                                decimalSeparator=","
+                                                                value={item.unit_price}
+                                                                onValueChange={(values) => handleEditChange(values, item.id, 'unit_price')}
+                                                                placeholder="Tutar"
                                                             />
                                                         </div>
                                                     </div>
@@ -1083,15 +1072,13 @@ const NewOffersPage = () => {
                                                     </div>
                                                     <div className="form-group">
                                                         <div className="form-control-wrap">
-                                                            <input
-                                                                name="tax"
-                                                                value={item.tax ? item.tax.label : ''} // item.tax null ise boş string kullan
-                                                                onChange={(e) => handleEditChange(e, item.id)}
-                                                                id="default-0"
+                                                            <RSelect
+                                                                value={item.tax && { label: item.tax.label, value: item.tax.value }}
+                                                                options={formattedTaxes}
+                                                                onChange={(selectedOption) => handleTaxChange(selectedOption, item.id)}
                                                                 placeholder="Vergi"
-                                                                type="text"
-                                                                className="form-control"
                                                             />
+
                                                         </div>
                                                     </div>
                                                 </Col>
@@ -1122,13 +1109,8 @@ const NewOffersPage = () => {
                                     </Row>
                                 </div>
                             ))}
-
-
-
-
                             {offer.length > 0 && (
                                 <Row>
-
                                     <Col xl="6" className="d-xl-block d-none">
                                     </Col>
                                     <Col xl="6" className="mt-0">
@@ -1169,7 +1151,6 @@ const NewOffersPage = () => {
                                             <strong className="px-2">-{calculateDiscount(calculateSubtotal())}₺</strong>
                                         </div>
                                     </Col>
-
                                     <Col xl="6" className="d-xl-block d-none">
                                     </Col>
                                     <Col xl="6" className="mt-0">
@@ -1181,7 +1162,6 @@ const NewOffersPage = () => {
                                         </div>
                                     </Col>
                                     <Col sm="12" className="mt-0">
-
                                         <hr className=""></hr>
                                         <div className="d-flex justify-content-xl-end justify-content-between">
                                             <ButtonToolbar className="g-2">
@@ -1194,17 +1174,17 @@ const NewOffersPage = () => {
                                             </ButtonToolbar>
                                         </div>
                                     </Col>
-
                                 </Row>
                             )}
-
                         </Row>
                     </form>
-
-
                 </PreviewCard>
             </Block>
-
+            <AddProductModal
+                modal={modal.add}
+                closeModal={() => setModal({ ...modal, add: false })}
+                onSubmit={addContactHistory}
+            />
         </Content>
     )
 }

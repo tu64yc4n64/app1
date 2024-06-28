@@ -152,7 +152,7 @@ const Router = () => {
         <Route path="firmalar" element={<CompanyList />}></Route>
 
         <Route path="teklifler" element={<OfferListPage />}></Route>
-        <Route path="teklif-detay/:teklifId" element={<OfferDetailPage />}></Route>
+        <Route path="teklif-detay/:offerId" element={<OfferDetailPage />}></Route>
 
         <Route path="kisi-tanimlamalari" element={<PersonsDefinitions />}></Route>
         <Route path="firma-tanimlamalari" element={<CompaniesDefinitions />}></Route>
