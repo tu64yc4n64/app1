@@ -430,6 +430,18 @@ const PersonDetailsPage = () => {
                               <strong className="ps-3">{person.updated_at} tarihinde düzenlendi.</strong>
                             </li>
                           </ul>
+                          <Col size="12">
+                            <div className="flex justify-start">
+                              <Button className="me-2" color="primary" type="submit">
+                                <span>Kişiyi Düzenle</span>
+                              </Button>
+                              <Button type="button" onClick={() => onFormCancel()} className="btn btn-outline-primary ">
+                                <span>Sil</span>
+                              </Button>
+
+
+                            </div>
+                          </Col>
                         </div>
                       </CardBody>
                     </div>

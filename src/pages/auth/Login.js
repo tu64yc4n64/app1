@@ -88,7 +88,7 @@ const Login = () => {
           {errorVal && (
             <div className="mb-3">
               <Alert color="danger" className="alert-icon">
-                <Icon name="alert-circle" /> Unable to login with credentials{" "}
+                <Icon name="alert-circle" /> Kullanıcı adı veya şifre hatalı..{" "}
               </Alert>
             </div>
           )}

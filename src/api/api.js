@@ -12,37 +12,73 @@ const api = axios.create({
 });
 
 const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (!refreshToken) {
+        console.error('No refresh token found in local storage.');
+        window.location.href = '/auth-login'; // Refresh token yoksa login sayfasına yönlendir
+        return null;
+    }
+
     try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post(`${baseURL}/refresh`, { token: refreshToken });
-        const { accessToken } = response.data;
-        localStorage.setItem('accessToken', accessToken);
-        return accessToken;
+        const response = await axios.post("https://tiosone.com/api/token/refresh/", {
+            refresh: refreshToken
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const newAccessToken = response.data.access;
+        localStorage.setItem('accessToken', newAccessToken);
+        return newAccessToken;
     } catch (error) {
-        console.error('Failed to refresh access token:', error);
-        throw error;
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            console.error("Refresh token is invalid or expired. User needs to re-login.");
+            window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
+        } else {
+            console.error("Error refreshing access token", error);
+        }
+        return null;
     }
 };
 
+
 const fetchData = async (url) => {
+    let accessToken = localStorage.getItem('accessToken');
+
     try {
-        const response = await api.get(url);
+        const response = await api.get(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
         return response.data;
     } catch (error) {
         if (error.response && error.response.status === 401) {
-            try {
-                const newAccessToken = await refreshAccessToken();
-                api.defaults.headers['Authorization'] = `Bearer ${newAccessToken}`;
-                const retryResponse = await api.get(url);
-                return retryResponse.data;
-            } catch (retryError) {
-                console.error('Failed to retry with new access token:', retryError);
-                throw retryError;
+            accessToken = await refreshAccessToken();
+            if (accessToken) {
+                try {
+                    const retryResponse = await api.get(url, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    });
+                    return retryResponse.data;
+                } catch (retryError) {
+                    console.error("Retry error after refreshing token", retryError);
+                    throw retryError;
+                }
+            } else {
+                window.location.href = '/auth-login'; // Hata durumunda login sayfasına yönlendir
             }
         } else {
             throw error;
         }
     }
 };
+
+
 
 export { fetchData };

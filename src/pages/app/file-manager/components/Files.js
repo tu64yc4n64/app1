@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import classNames from 'classnames';
 import { useFileManager, useFileManagerUpdate } from "../components/Context";
 import icons from './Icons';
@@ -11,10 +11,10 @@ import Share from "../modals/Share";
 import Copy from "../modals/Copy";
 import Move from "../modals/Move";
 
-const File = ({item, fileView, page}) => {
-    const {fileManagerUpdate} = useFileManagerUpdate();
-    
-    const [detailModal, setDetailModal] = useState(false);  
+const File = ({ item, fileView, page }) => {
+    const { fileManagerUpdate } = useFileManagerUpdate();
+
+    const [detailModal, setDetailModal] = useState(false);
     const [shareModal, setShareModal] = useState(false);
     const [copyModal, setCopyModal] = useState(false);
     const [moveModal, setMoveModal] = useState(false);
@@ -27,10 +27,10 @@ const File = ({item, fileView, page}) => {
         setShareModal(!shareModal);
     };
     const toggleCopyModal = () => {
-      setCopyModal(!copyModal);
+        setCopyModal(!copyModal);
     };
     const toggleMoveModal = () => {
-      setMoveModal(!moveModal);
+        setMoveModal(!moveModal);
     };
     const toggleCreateModal = () => {
         setCreateModal(!createModal);
@@ -76,7 +76,7 @@ const File = ({item, fileView, page}) => {
                         {(item.access && fileView === 'group') && <li className="members">{item.access.length} Members</li>}
                     </ul>}
                 </div>
-                {fileView === 'list' &&  <>
+                {fileView === 'list' && <>
                     {(page === undefined) && <div className="nk-file-meta">
                         <div className="tb-lead">{item.date}</div>
                     </div>}
@@ -96,40 +96,40 @@ const File = ({item, fileView, page}) => {
                         <DropdownMenu end>
                             <ul className="link-list-opt no-bdr">
                                 <li>
-                                    <DropdownItem tag="a" href="#item" onClick={(ev) => {ev.preventDefault(); setDetailModal(true);}}>
+                                    <DropdownItem tag="a" href="#item" onClick={(ev) => { ev.preventDefault(); setDetailModal(true); }}>
                                         <Icon name="eye"></Icon>
                                         <span>Details</span>
                                     </DropdownItem>
                                 </li>
                                 <li>
-                                    <DropdownItem tag="a" href="#item" onClick={(ev) => {ev.preventDefault(); setShareModal(true);}}>
+                                    <DropdownItem tag="a" href="#item" onClick={(ev) => { ev.preventDefault(); setShareModal(true); }}>
                                         <Icon name="share"></Icon>
                                         <span>Share</span>
                                     </DropdownItem>
                                 </li>
                                 <li>
-                                    <DropdownItem tag="a" href="#item" onClick={(ev) => {ev.preventDefault(); setCopyModal(true)}}>
+                                    <DropdownItem tag="a" href="#item" onClick={(ev) => { ev.preventDefault(); setCopyModal(true) }}>
                                         <Icon name="copy"></Icon>
                                         <span>Copy</span>
                                     </DropdownItem>
                                 </li>
                                 <li>
-                                    <DropdownItem tag="a" href="#item" onClick={(ev) => {ev.preventDefault(); setMoveModal(true)}}>
+                                    <DropdownItem tag="a" href="#item" onClick={(ev) => { ev.preventDefault(); setMoveModal(true) }}>
                                         <Icon name="forward-arrow"></Icon>
                                         <span>Move</span>
                                     </DropdownItem>
                                 </li>
                                 <li>
-                                    <DropdownItem tag="a" href="#item" onClick={(ev) => {ev.preventDefault(); downloadFile(item)}}>
+                                    <DropdownItem tag="a" href="#item" onClick={(ev) => { ev.preventDefault(); downloadFile(item) }}>
                                         <Icon name="download"></Icon>
                                         <span>Download</span>
                                     </DropdownItem>
                                 </li>
                                 <li>
-                                    <DropdownItem tag="a" href="#item" onClick={(ev) => {ev.preventDefault(); fileManagerUpdate.toTrash(item.id, !item.deleted)}}>
-                                        {item.deleted ? 
-                                            <><Icon name="back-arrow"></Icon> <span>Restore</span></> 
-                                            : 
+                                    <DropdownItem tag="a" href="#item" onClick={(ev) => { ev.preventDefault(); fileManagerUpdate.toTrash(item.id, !item.deleted) }}>
+                                        {item.deleted ?
+                                            <><Icon name="back-arrow"></Icon> <span>Restore</span></>
+                                            :
                                             <><Icon name="trash"></Icon><span>Delete</span></>
                                         }
                                     </DropdownItem>
@@ -140,7 +140,7 @@ const File = ({item, fileView, page}) => {
                 </div>
 
                 <Modal isOpen={detailModal} size="md" toggle={toggleDetailModal}>
-                    <Details file={item} toggle={toggleDetailModal} toggleShare={toggleShareModal} triggerDownload={downloadFile}/>
+                    <Details file={item} toggle={toggleDetailModal} toggleShare={toggleShareModal} triggerDownload={downloadFile} />
                 </Modal>
 
                 <Modal isOpen={shareModal} size="md" toggle={toggleShareModal}>
@@ -164,10 +164,10 @@ const File = ({item, fileView, page}) => {
 }
 
 
-const Files = ({files, fixedView, page}) => {
+const Files = ({ files, fixedView, page }) => {
 
-    const {fileManager} = useFileManager();
-    
+    const { fileManager } = useFileManager();
+
     const fileView = fixedView ? fixedView : fileManager.filesView;
 
     const mainClass = classNames({
@@ -181,12 +181,12 @@ const Files = ({files, fixedView, page}) => {
         <div className={mainClass}>
             {filesList.length > 0 && <div className="nk-files-head">
                 <div className="nk-file-item">
-                    {fileView === 'list' && <> 
+                    {fileView === 'list' && <>
                         <div className="nk-file-info">
                             <div className="tb-head">Name</div>
                             <div className="tb-head"></div>
                         </div>
-                        {(page === undefined) &&<div className="nk-file-meta">
+                        {(page === undefined) && <div className="nk-file-meta">
                             <div className="tb-head">Last Opened</div>
                         </div>}
                         {(page === 'recovery') && <div className="nk-file-date">
@@ -200,10 +200,10 @@ const Files = ({files, fixedView, page}) => {
                     </>}
                 </div>
             </div>}
-            {(fileView === 'list' || fileView === 'grid') && 
+            {(fileView === 'list' || fileView === 'grid') &&
                 <div className="nk-files-list">
                     {filesList.map((item) => (
-                        <File fileView={fileView} item={item} key={item.id} page={page}/>
+                        <File fileView={fileView} item={item} key={item.id} page={page} />
                     ))}
                 </div>
             }
@@ -212,7 +212,7 @@ const Files = ({files, fixedView, page}) => {
                     <h6 className="title border-top-0">Folders</h6>
                     <div className="nk-files-list">
                         {filesList.filter(item => item.type === 'folder').map((item) => (
-                            <File fileView={fileView} item={item} key={item.id} page={page}/>
+                            <File fileView={fileView} item={item} key={item.id} page={page} />
                         ))}
                     </div>
                 </div>
@@ -220,7 +220,7 @@ const Files = ({files, fixedView, page}) => {
                     <h6 className="title">Files</h6>
                     <div className="nk-files-list">
                         {filesList.filter(item => item.type === 'file').map((item) => (
-                            <File fileView={fileView} item={item} key={item.id} page={page}/>
+                            <File fileView={fileView} item={item} key={item.id} page={page} />
                         ))}
                     </div>
                 </div>

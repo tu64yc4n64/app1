@@ -5,6 +5,7 @@ import Icon from '../../components/icon/Icon';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import './style.css'; // CSS dosyasını da import ediyoruz
 
+
 const News = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -46,12 +47,18 @@ const News = () => {
         ];
         setResults(allResults);
       } catch (error) {
-        console.error('Search error:', error);
+        if (error.response && error.response.status === 404) {
+          console.error('Search endpoint not found:', error);
+        } else {
+          console.error('Search error:', error);
+        }
       }
     } else {
       setResults([]);
     }
   };
+
+
 
   const handleResultClick = (result) => {
     setResults([]);

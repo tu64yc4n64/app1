@@ -1,7 +1,7 @@
-import Accordian from "./partials/accordian/Preview";
+
 import Button from "./button/Button";
 import Icon from "./icon/Icon";
-import NioIconCard from "./partials/nioIcon/NioIcon";
+
 import TooltipComponent from "./tooltip/Tooltip";
 import Table from "./table/Table";
 import UserAvatar from "./user/UserAvatar";
@@ -13,11 +13,7 @@ import ReactDataTable from "./table/ReactDataTable";
 import RSelect from "./select/ReactSelect";
 import InputSwitch from "./input/switch/Switch";
 import OutlinedInput from "./input/outlined-input/OutlinedInput";
-import Progress from "./progress/Progress";
-import NSComponent from "./number-spinner/NumberSpinner";
-import Knob from "./knob/Knob";
-import ReactDualList from "./dual-list/RDualList";
-import Rating from "./rating/Rating";
+
 import {
   Block,
   BlockHead,
@@ -34,8 +30,8 @@ import { OverlineTitle } from "./text/Text";
 import { SpecialTable, OrderTable, LoginLogTable } from "./table/SpecialTable";
 import { PreviewCard, PreviewAltCard, PreviewTable, CodeBlock } from "./preview/Preview";
 import { LineChartExample, BarChartExample, PieChartExample, DoughnutExample, PolarExample } from "./charts/Chart";
-import { EmailHeader, EmailBody, EmailBodyContent, EmailWrapper, EmailFooter } from "./email/Email";
-import { ProjectCard, ProjectBody, ProjectHead } from "./partials/project-card/ProjectCard";
+
+
 import {
   DataTable,
   DataTableBody,
@@ -46,7 +42,6 @@ import {
 } from "../components/table/DataTable";
 
 export {
-  Accordian,
   LinkItem,
   LinkList,
   OverlineTitle,
@@ -57,11 +52,8 @@ export {
   InputSwitch,
   Block,
   BlockContent,
-  Rating,
   PaginationComponent,
-  ReactDualList,
   DataTablePagination,
-  NSComponent,
   ReactDataTable,
   PreviewCard,
   PreviewTable,
@@ -81,21 +73,11 @@ export {
   Col,
   TooltipComponent,
   SpecialTable,
-  Knob,
   LineChartExample,
   BarChartExample,
   PieChartExample,
   DoughnutExample,
   PolarExample,
-  EmailHeader,
-  EmailBody,
-  EmailBodyContent,
-  EmailWrapper,
-  EmailFooter,
-  NioIconCard,
-  ProjectCard,
-  ProjectBody,
-  ProjectHead,
   DataTableRow,
   DataTableItem,
   DataTableHead,
@@ -104,5 +86,4 @@ export {
   DataTableTitle,
   PreviewAltCard,
   RSelect,
-  Progress,
 };
